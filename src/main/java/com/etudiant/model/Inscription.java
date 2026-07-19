@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import java.time.format.DateTimeFormatter;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -68,5 +69,12 @@ public class Inscription {
 
     public enum StatutInscription {
         INSCRIT, REINSCRIT, SUSPENDU, DIPLOME
+    }
+
+    public String getDateInscriptionFormatted() {
+        if (dateInscription == null) {
+            return "";
+        }
+        return dateInscription.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 }
