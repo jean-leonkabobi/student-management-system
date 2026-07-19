@@ -62,7 +62,7 @@ public class EtudiantController {
         model.addAttribute("pageActive", "etudiants");
         model.addAttribute("pageTitle", "Liste des Étudiants");
 
-        return "etudiant/liste";
+        return "etudiants/liste";
     }
 
     /**
@@ -78,7 +78,7 @@ public class EtudiantController {
         model.addAttribute("pageActive", "etudiants");
         model.addAttribute("pageTitle", "Ajouter un Étudiant");
 
-        return "etudiant/ajouter";
+        return "etudiants/ajouter";
     }
 
     /**
@@ -105,7 +105,7 @@ public class EtudiantController {
             model.addAttribute("niveaux", niveauService.findAll());
             model.addAttribute("pageActive", "etudiants");
             model.addAttribute("pageTitle", "Ajouter un Étudiant");
-            return "etudiant/ajouter";
+            return "etudiants/ajouter";
         }
 
         try {
@@ -127,7 +127,7 @@ public class EtudiantController {
             model.addAttribute("niveaux", niveauService.findAll());
             model.addAttribute("pageActive", "etudiants");
             model.addAttribute("pageTitle", "Ajouter un Étudiant");
-            return "etudiant/ajouter";
+            return "etudiants/ajouter";
         }
     }
 
@@ -145,7 +145,7 @@ public class EtudiantController {
                     model.addAttribute("niveaux", niveauService.findAll());
                     model.addAttribute("pageActive", "etudiants");
                     model.addAttribute("pageTitle", "Modifier un Étudiant");
-                    return "etudiant/modifier";
+                    return "etudiants/modifier";
                 })
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé");
@@ -180,7 +180,7 @@ public class EtudiantController {
             model.addAttribute("niveaux", niveauService.findAll());
             model.addAttribute("pageActive", "etudiants");
             model.addAttribute("pageTitle", "Modifier un Étudiant");
-            return "etudiant/modifier";
+            return "etudiants/modifier";
         }
 
         try {
@@ -199,7 +199,7 @@ public class EtudiantController {
             model.addAttribute("niveaux", niveauService.findAll());
             model.addAttribute("pageActive", "etudiants");
             model.addAttribute("pageTitle", "Modifier un Étudiant");
-            return "etudiant/modifier";
+            return "etudiants/modifier";
         }
     }
 
@@ -244,7 +244,7 @@ public class EtudiantController {
                     model.addAttribute("etudiant", etudiant);
                     model.addAttribute("pageActive", "etudiants");
                     model.addAttribute("pageTitle", "Détail de l'Étudiant");
-                    return "etudiant/detail";
+                    return "etudiants/detail";
                 })
                 .orElseGet(() -> {
                     redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé");
@@ -288,6 +288,6 @@ public class EtudiantController {
         model.addAttribute("pageActive", "etudiants");
         model.addAttribute("pageTitle", "Recherche d'Étudiants");
 
-        return "etudiant/recherche";
+        return "etudiants/recherche";
     }
 }
