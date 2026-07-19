@@ -40,21 +40,22 @@ public class Inscription {
     private AnneeAcademique anneeAcademique;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "date_inscription")
     private LocalDate dateInscription;
 
     @Enumerated(EnumType.STRING)
     private StatutInscription statut = StatutInscription.INSCRIT;
 
-    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Note> notes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Paiement> paiements = new ArrayList<>();
 
-    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "inscription", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Presence> presences = new ArrayList<>();
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -65,5 +66,7 @@ public class Inscription {
         }
     }
 
-    public enum StatutInscription { INSCRIT, REINSCRIT, SUSPENDU, DIPLOME }
+    public enum StatutInscription {
+        INSCRIT, REINSCRIT, SUSPENDU, DIPLOME
+    }
 }

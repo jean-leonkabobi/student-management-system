@@ -31,12 +31,14 @@ public class Filiere {
     @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères")
     private String nom;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
+
     private String departement;
 
-    @OneToMany(mappedBy = "filiere")
+    @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Inscription> inscriptions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "filiere")
+    @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Matiere> matieres = new ArrayList<>();
 }

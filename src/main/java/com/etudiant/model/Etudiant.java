@@ -47,11 +47,17 @@ public class Etudiant {
     private Sexe sexe;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 
+    @Column(name = "lieu_naissance")
     private String lieuNaissance;
+
     private String nationalite;
+
+    @Column(name = "etat_civil")
     private String etatCivil;
+
     private String photo;
 
     @Size(max = 20, message = "Le téléphone ne peut pas dépasser 20 caractères")
@@ -61,7 +67,9 @@ public class Etudiant {
     @Column(unique = true)
     private String email;
 
+    @Column(columnDefinition = "TEXT")
     private String adresse;
+
     private String ville;
     private String pays;
 
@@ -77,9 +85,10 @@ public class Etudiant {
     @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Inscription> inscriptions = new ArrayList<>();
 
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -93,13 +102,15 @@ public class Etudiant {
         updatedAt = LocalDateTime.now();
     }
 
-    // Enumérations internes
-    public enum Sexe { M, F }
+    public enum Sexe {
+        M, F
+    }
 
-    public enum StatutEtudiant { ACTIF, SUSPENDU, DIPLOME, ABANDONNE }
+    public enum StatutEtudiant {
+        ACTIF, SUSPENDU, DIPLOME, ABANDONNE
+    }
 
-    // Méthode utilitaire pour afficher le nom complet
     public String getNomComplet() {
-        return (postnom != null ? postnom + " " : "") + nom + " " + prenom;
+        return (postnom != null && !postnom.isEmpty() ? postnom + " " : "") + nom + " " + prenom;
     }
 }
