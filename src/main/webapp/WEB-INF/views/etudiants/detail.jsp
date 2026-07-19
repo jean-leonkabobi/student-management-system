@@ -39,7 +39,7 @@
                     </tr>
                     <tr>
                         <th>Date de naissance</th>
-                        <td><fmt:formatDate value="${etudiant.dateNaissance}" pattern="dd/MM/yyyy"/></td>
+                        <td>${etudiant.dateNaissanceFormatted}</td>
                     </tr>
                     <tr>
                         <th>Lieu de naissance</th>

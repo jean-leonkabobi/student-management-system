@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import java.time.format.DateTimeFormatter;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -112,5 +113,12 @@ public class Etudiant {
 
     public String getNomComplet() {
         return (postnom != null && !postnom.isEmpty() ? postnom + " " : "") + nom + " " + prenom;
+    }
+
+    public String getDateNaissanceFormatted() {
+        if (dateNaissance == null) {
+            return "";
+        }
+        return dateNaissance.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 }

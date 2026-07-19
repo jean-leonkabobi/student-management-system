@@ -45,7 +45,7 @@
 
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Montant payé</label>
-                    <form:input path="montantPaye" type="number" step="0.01" class="form-control" placeholder="0.00"/>
+                    <form:input path="montantPaye" type="number" Mercistep="0.01" class="form-control" placeholder="0.00"/>
                 </div>
 
                 <div class="col-md-6 mb-3">
