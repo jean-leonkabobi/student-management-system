@@ -74,7 +74,8 @@ public class PaiementServiceImpl implements PaiementService {
 
     @Override
     public Paiement save(Paiement paiement) {
-        log.info("Sauvegarde d'un paiement pour l'inscription ID: {}", paiement.getInscription().getId());
+        log.info("Sauvegarde d'un paiement pour l'inscription ID: {}",
+                paiement.getInscription() != null ? paiement.getInscription().getId() : "null");
         return paiementRepository.save(paiement);
     }
 
