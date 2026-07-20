@@ -1,7 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%
+    String username = (String) session.getAttribute("username");
+    Object roleObj = session.getAttribute("role");
+    String role = roleObj != null ? roleObj.toString() : "ETUDIANT";
+    if (username == null) username = "Utilisateur";
+%>
 <!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,17 +22,10 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <!-- Styles personnalisés -->
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-
     <style>
         :root {
-            --primary-color: #2563EB;
+            --primary: #2563EB;
             --primary-dark: #1E40AF;
-            --primary-light: #3B82F6;
             --background: #F1F5F9;
             --card-bg: #FFFFFF;
             --text-primary: #0F172A;
@@ -34,15 +33,13 @@
             --text-muted: #94A3B8;
             --border: #E2E8F0;
             --radius: 12px;
-            --radius-sm: 8px;
             --shadow: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-hover: 0 4px 20px rgba(0,0,0,0.08);
-            --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-            --header-height: 70px;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             background: var(--background);
             color: var(--text-primary);
             min-height: 100vh;
@@ -50,18 +47,17 @@
 
         /* Header */
         .top-header {
-            height: var(--header-height);
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             padding: 0 32px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(12px);
-            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
         .top-header .brand {
@@ -75,8 +71,8 @@
         .top-header .brand .logo {
             width: 40px;
             height: 40px;
-            background: var(--primary-color);
-            border-radius: var(--radius-sm);
+            background: var(--primary);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -90,27 +86,13 @@
         }
 
         .top-header .brand .brand-text span {
-            color: var(--primary-color);
+            color: var(--primary);
         }
 
         .top-header .header-right {
             display: flex;
             align-items: center;
-            gap: 16px;
-        }
-
-        .top-header .header-right .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
+            gap: 20px;
         }
 
         .top-header .header-right .user-info {
@@ -120,6 +102,7 @@
         .top-header .header-right .user-info .name {
             font-weight: 600;
             font-size: 14px;
+            color: var(--text-primary);
         }
 
         .top-header .header-right .user-info .role {
@@ -127,72 +110,39 @@
             color: var(--text-muted);
         }
 
-        /* Menu utilisateur */
-        .user-menu {
-            position: relative;
-        }
-
-        .user-menu .dropdown-menu {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 8px 0;
-            min-width: 200px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-            display: none;
-        }
-
-        .user-menu .dropdown-menu.show {
-            display: block;
-        }
-
-        .user-menu .dropdown-menu a {
+        .top-header .header-right .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .top-header .header-right .logout-link {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
-            transition: background var(--transition);
+            transition: color 0.15s;
         }
 
-        .user-menu .dropdown-menu a:hover {
-            background: var(--background);
-            color: var(--text-primary);
+        .top-header .header-right .logout-link:hover {
+            color: var(--primary);
         }
 
-        .user-menu .dropdown-menu .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 4px 0;
-        }
-
-        .user-menu .dropdown-menu .text-danger {
-            color: #EF4444 !important;
-        }
-
-        .user-menu .dropdown-menu .text-danger:hover {
-            background: #FEF2F2;
-        }
-
-        /* Layout principal */
+        /* Contenu */
         .main-content {
             max-width: 1200px;
             margin: 0 auto;
             padding: 24px 32px 40px;
         }
 
-        /* Page content */
-        .page-content {
-            background: transparent;
-            padding: 0;
-        }
-
-        /* Breadcrumb */
         .breadcrumb-custom {
             font-size: 14px;
             color: var(--text-muted);
@@ -200,8 +150,12 @@
         }
 
         .breadcrumb-custom a {
-            color: var(--primary-color);
+            color: var(--primary);
             text-decoration: none;
+        }
+
+        .breadcrumb-custom a:hover {
+            text-decoration: underline;
         }
 
         .breadcrumb-custom span {
@@ -215,35 +169,54 @@
         }
 
         /* Cards */
-        .card-modern {
-            background: var(--card-bg);
+        .card {
             border-radius: var(--radius);
             border: 1px solid var(--border);
-            padding: 24px;
-            transition: all var(--transition);
+            box-shadow: var(--shadow);
         }
 
-        .card-modern:hover {
-            box-shadow: var(--shadow-hover);
+        .card-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
         }
 
-        /* Responsive */
+        /* Alertes */
+        .alert {
+            border-radius: var(--radius);
+            border: none;
+        }
+
+        .alert-success {
+            background: #F0FDF4;
+            color: #16A34A;
+        }
+
+        .alert-danger {
+            background: #FEF2F2;
+            color: #DC2626;
+        }
+
+        .alert-info {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        /* Footer */
+        .footer-custom {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
-            .top-header {
-                padding: 0 16px;
-            }
-
-            .top-header .brand .brand-text {
-                font-size: 16px;
-            }
-
-            .top-header .header-right .user-info {
-                display: none;
-            }
-
-            .main-content {
-                padding: 16px;
-            }
+            .top-header { padding: 0 16px; }
+            .top-header .brand .brand-text { font-size: 16px; }
+            .top-header .header-right .user-info { display: none; }
+            .main-content { padding: 16px; }
+            .page-title { font-size: 20px; }
         }
     </style>
 </head>
@@ -264,26 +237,14 @@
 
     <div class="header-right">
         <div class="user-info">
-            <div class="name">${username}</div>
-            <div class="role">${role}</div>
+            <div class="name"><%= username %></div>
+            <div class="role"><%= role %></div>
         </div>
-
-        <div class="user-menu" id="userMenu">
-            <div class="avatar" onclick="toggleDropdown()">
-                ${username != null ? username.substring(0, 2).toUpperCase() : 'U'}
-            </div>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <a href="${pageContext.request.contextPath}/dashboard">
-                    <i class="fas fa-th-large"></i> Tableau de bord
-                </a>
-                <a href="#">
-                    <i class="fas fa-user"></i> Mon profil
-                </a>
-                <div class="divider"></div>
-                <a href="${pageContext.request.contextPath}/logout" class="text-danger">
-                    <i class="fas fa-sign-out-alt"></i> Déconnexion
-                </a>
-            </div>
+        <a href="${pageContext.request.contextPath}/logout" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i>
+        </a>
+        <div class="avatar">
+            <%= username.substring(0, Math.min(2, username.length())).toUpperCase() %>
         </div>
     </div>
 </header>
@@ -302,6 +263,3 @@
 
     <!-- Page Title -->
     <h1 class="page-title">${pageTitle}</h1>
-
-    <!-- CONTENU DE LA PAGE -->
-    <div class="page-content">
