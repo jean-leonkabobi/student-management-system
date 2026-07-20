@@ -33,7 +33,12 @@
             --text-muted: #94A3B8;
             --border: #E2E8F0;
             --radius: 12px;
+            --radius-sm: 8px;
             --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 4px 20px rgba(0,0,0,0.08);
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,12 +50,138 @@
             min-height: 100vh;
         }
 
-        /* Header */
+        /* ========================================== */
+        /* LAYOUT PRINCIPAL */
+        /* ========================================== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* SIDEBAR */
+        /* ========================================== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            overflow-y: auto;
+            transition: all var(--transition);
+            z-index: 1000;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .sidebar-brand .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .sidebar-brand .brand-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sidebar-brand .brand-text span {
+            color: var(--primary);
+        }
+
+        /* Navigation */
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-nav .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 16px 12px 8px;
+        }
+
+        .sidebar-nav .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all var(--transition);
+        }
+
+        .sidebar-nav .nav-link i {
+            width: 20px;
+            font-size: 16px;
+            color: var(--text-muted);
+            transition: color var(--transition);
+        }
+
+        .sidebar-nav .nav-link:hover {
+            background: var(--background);
+            color: var(--text-primary);
+        }
+
+        .sidebar-nav .nav-link:hover i {
+            color: var(--primary);
+        }
+
+        .sidebar-nav .nav-link.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .sidebar-nav .nav-link.active i {
+            color: white;
+        }
+
+        /* ========================================== */
+        /* CONTENU PRINCIPAL */
+        /* ========================================== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* ========================================== */
+        /* HEADER */
+        /* ========================================== */
         .top-header {
             background: var(--card-bg);
             border-bottom: 1px solid var(--border);
             padding: 0 32px;
-            height: 70px;
+            height: var(--header-height);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -60,7 +191,23 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
-        .top-header .brand {
+        .top-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .top-header .header-left .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .top-header .header-left .brand {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -68,7 +215,7 @@
             color: var(--text-primary);
         }
 
-        .top-header .brand .logo {
+        .top-header .header-left .brand .logo {
             width: 40px;
             height: 40px;
             background: var(--primary);
@@ -80,12 +227,12 @@
             font-size: 18px;
         }
 
-        .top-header .brand .brand-text {
+        .top-header .header-left .brand .brand-text {
             font-size: 18px;
             font-weight: 700;
         }
 
-        .top-header .brand .brand-text span {
+        .top-header .header-left .brand .brand-text span {
             color: var(--primary);
         }
 
@@ -110,6 +257,17 @@
             color: var(--text-muted);
         }
 
+        .top-header .header-right .logout-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.15s;
+        }
+
+        .top-header .header-right .logout-link:hover {
+            color: var(--danger, #EF4444);
+        }
+
         .top-header .header-right .avatar {
             width: 42px;
             height: 42px;
@@ -125,21 +283,26 @@
             flex-shrink: 0;
         }
 
-        .top-header .header-right .logout-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.15s;
+        /* Overlay pour mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
         }
 
-        .top-header .header-right .logout-link:hover {
-            color: var(--primary);
+        .sidebar-overlay.active {
+            display: block;
         }
 
-        /* Contenu */
-        .main-content {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* ========================================== */
+        /* CONTENU DES PAGES */
+        /* ========================================== */
+        .page-content {
             padding: 24px 32px 40px;
         }
 
@@ -166,6 +329,7 @@
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 24px;
+            color: var(--text-primary);
         }
 
         /* Cards */
@@ -211,55 +375,174 @@
             font-size: 14px;
         }
 
+        /* ========================================== */
+        /* RESPONSIVE */
+        /* ========================================== */
         @media (max-width: 768px) {
-            .top-header { padding: 0 16px; }
-            .top-header .brand .brand-text { font-size: 16px; }
-            .top-header .header-right .user-info { display: none; }
-            .main-content { padding: 16px; }
-            .page-title { font-size: 20px; }
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .top-header .header-left .menu-toggle {
+                display: block;
+            }
+
+            .top-header .header-left .brand .brand-text {
+                font-size: 16px;
+            }
+
+            .top-header {
+                padding: 0 16px;
+            }
+
+            .top-header .header-right .user-info {
+                display: none;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- ========================================== -->
-<!-- HEADER -->
-<!-- ========================================== -->
-<header class="top-header">
-    <a href="${pageContext.request.contextPath}/dashboard" class="brand">
-        <div class="logo">
-            <i class="fas fa-graduation-cap"></i>
-        </div>
-        <div class="brand-text">
-            Gestion<span>Étudiants</span>
-        </div>
-    </a>
+<div class="app-container">
 
-    <div class="header-right">
-        <div class="user-info">
-            <div class="name"><%= username %></div>
-            <div class="role"><%= role %></div>
+    <!-- Overlay pour mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ========================================== -->
+    <!-- SIDEBAR -->
+    <!-- ========================================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="brand-text">
+                Gestion<span>Étudiants</span>
+            </div>
         </div>
-        <a href="${pageContext.request.contextPath}/logout" class="logout-link">
-            <i class="fas fa-sign-out-alt"></i>
-        </a>
-        <div class="avatar">
-            <%= username.substring(0, Math.min(2, username.length())).toUpperCase() %>
-        </div>
-    </div>
-</header>
 
-<!-- ========================================== -->
-<!-- CONTENU PRINCIPAL -->
-<!-- ========================================== -->
-<main class="main-content">
+        <nav>
+            <ul class="sidebar-nav">
+                <li class="nav-label">Menu Principal</li>
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb-custom">
-        <a href="${pageContext.request.contextPath}/dashboard">Accueil</a>
-        <span>/</span>
-        <span>${pageTitle}</span>
-    </div>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/dashboard"
+                       class="nav-link ${pageActive == 'dashboard' ? 'active' : ''}">
+                        <i class="fas fa-th-large"></i>
+                        Tableau de bord
+                    </a>
+                </li>
 
-    <!-- Page Title -->
-    <h1 class="page-title">${pageTitle}</h1>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/notes"
+                       class="nav-link ${pageActive == 'notes' ? 'active' : ''}">
+                        <i class="fas fa-file-alt"></i>
+                        Mes notes
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/paiements"
+                       class="nav-link ${pageActive == 'paiements' ? 'active' : ''}">
+                        <i class="fas fa-coins"></i>
+                        Mes paiements
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/emploi"
+                       class="nav-link ${pageActive == 'emploi' ? 'active' : ''}">
+                        <i class="fas fa-calendar-alt"></i>
+                        Mon emploi du temps
+                    </a>
+                </li>
+
+                <li class="nav-label">Mon Compte</li>
+
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/etudiants/detail/${sessionScope.utilisateur.etudiant.id}"
+                       class="nav-link ${pageActive == 'profil' ? 'active' : ''}">
+                        <i class="fas fa-user"></i>
+                        Mon profil
+                    </a>
+                </li>
+
+                <!-- Séparateur visuel -->
+                <li style="padding: 8px 0; list-style: none;"></li>
+
+                <!-- Déconnexion en bas -->
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/logout"
+                       class="nav-link" style="color: #EF4444; border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Déconnexion
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- CONTENU PRINCIPAL -->
+    <!-- ========================================== -->
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a href="${pageContext.request.contextPath}/dashboard" class="brand">
+                    <div class="logo">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="brand-text">
+                        Gestion<span>Étudiants</span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="name"><%= username %></div>
+                    <div class="role"><%= role %></div>
+                </div>
+                <a href="${pageContext.request.contextPath}/logout" class="logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+                <div class="avatar">
+                    <%= username.substring(0, Math.min(2, username.length())).toUpperCase() %>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENU DE LA PAGE -->
+        <div class="page-content">
+
+            <!-- Breadcrumb -->
+            <div class="breadcrumb-custom">
+                <a href="${pageContext.request.contextPath}/dashboard">Accueil</a>
+                <span>/</span>
+                <span>${pageTitle}</span>
+            </div>
+
+            <!-- Page Title -->
+            <h1 class="page-title">${pageTitle}</h1>

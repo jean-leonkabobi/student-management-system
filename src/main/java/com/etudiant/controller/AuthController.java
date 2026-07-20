@@ -1,7 +1,10 @@
 package com.etudiant.controller;
 
+import com.etudiant.model.Etudiant;
+import com.etudiant.model.Etudiant.StatutEtudiant;
 import com.etudiant.model.Utilisateur;
 import com.etudiant.model.Utilisateur.Role;
+import com.etudiant.service.EtudiantService;
 import com.etudiant.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import javax.servlet.http.HttpSession;
 public class AuthController {
 
     private final UtilisateurService utilisateurService;
+    private final EtudiantService etudiantService;
 
     @GetMapping("/login")
     public String loginPage(HttpSession session, Model model) {
@@ -91,21 +95,45 @@ public class AuthController {
             return "redirect:/register";
         }
 
-        // Créer l'utilisateur
-        Utilisateur utilisateur = new Utilisateur();
-        utilisateur.setUsername(username);
-        utilisateur.setEmail(email);
-        utilisateur.setPasswordHash(passwordHash);
-        utilisateur.setEstActif(true);
-
         try {
-            utilisateur.setRole(Role.valueOf(role));
-        } catch (IllegalArgumentException e) {
-            utilisateur.setRole(Role.ETUDIANT);
-        }
+            // 1. Créer l'étudiant
+            Etudiant etudiant = new Etudiant();
+            etudiant.setMatricule(etudiantService.generateMatricule());
+            etudiant.setNom(username); // Par défaut le nom d'utilisateur
+            etudiant.setPrenom(username);
+            etudiant.setEmail(email);
+            etudiant.setStatut(StatutEtudiant.ACTIF);
 
-        utilisateurService.save(utilisateur);
-        redirectAttributes.addFlashAttribute("success", "Inscription réussie ! Vous pouvez maintenant vous connecter.");
+            // Sauvegarder l'étudiant
+            Etudiant savedEtudiant = etudiantService.save(etudiant);
+            log.info("Étudiant créé pour l'utilisateur {}: {}", username, savedEtudiant.getMatricule());
+
+            // 2. Créer l'utilisateur
+            Utilisateur utilisateur = new Utilisateur();
+            utilisateur.setUsername(username);
+            utilisateur.setEmail(email);
+            utilisateur.setPasswordHash(passwordHash);
+            utilisateur.setEstActif(true);
+            utilisateur.setEtudiant(savedEtudiant); // Lier l'étudiant
+
+            try {
+                utilisateur.setRole(Role.valueOf(role));
+            } catch (IllegalArgumentException e) {
+                utilisateur.setRole(Role.ETUDIANT);
+            }
+
+            utilisateurService.save(utilisateur);
+            log.info("Utilisateur créé avec succès: {} lié à l'étudiant ID: {}", username, savedEtudiant.getId());
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Inscription réussie ! Vous pouvez maintenant vous connecter. Matricule: " + savedEtudiant.getMatricule());
+
+        } catch (Exception e) {
+            log.error("Erreur lors de l'inscription: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error",
+                    "Erreur lors de l'inscription: " + e.getMessage());
+            return "redirect:/register";
+        }
 
         return "redirect:/login";
     }

@@ -2,15 +2,38 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<jsp:include page="../fragments/header.jsp"/>
+<%
+    Object roleObj = session.getAttribute("role");
+    String role = roleObj != null ? roleObj.toString() : "ETUDIANT";
+    boolean isEtudiant = "ETUDIANT".equals(role);
+%>
+
+<c:choose>
+    <c:when test="<%= isEtudiant %>">
+        <jsp:include page="../fragments/header-commun.jsp"/>
+    </c:when>
+    <c:otherwise>
+        <jsp:include page="../fragments/header.jsp"/>
+    </c:otherwise>
+</c:choose>
+
+<!-- ========================================== -->
+<!-- PAGE : LISTE DES PAIEMENTS -->
+<!-- ========================================== -->
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="fas fa-coins text-primary"></i> Liste des Paiements</h2>
-    <div>
+    <h2 style="font-size: 20px; font-weight: 700;">
+        <i class="fas fa-coins" style="color: #2563EB;"></i>
+        <c:choose>
+            <c:when test="<%= isEtudiant %>">Mes Paiements</c:when>
+            <c:otherwise>Liste des Paiements</c:otherwise>
+        </c:choose>
+    </h2>
+    <c:if test="<%= !isEtudiant %>">
         <a href="${pageContext.request.contextPath}/paiements/ajouter" class="btn btn-primary">
             <i class="fas fa-plus"></i> Nouveau paiement
         </a>
-    </div>
+    </c:if>
 </div>
 
 <!-- Messages -->
@@ -28,68 +51,62 @@
     </div>
 </c:if>
 
-<!-- Filtres -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form action="${pageContext.request.contextPath}/paiements" method="get" class="row g-2">
-            <div class="col-md-4">
-                <select name="inscriptionId" class="form-select">
-                    <option value="">Toutes les inscriptions</option>
-                    <c:forEach items="${inscriptions}" var="i">
-                        <option value="${i.id}" ${param.inscriptionId == i.id ? 'selected' : ''}>
-                                ${i.etudiant.matricule} - ${i.etudiant.prenom} ${i.etudiant.nom}
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <select name="statut" class="form-select">
-                    <option value="">Tous les statuts</option>
-                    <c:forEach items="${statuts}" var="s">
-                        <option value="${s}" ${param.statut == s ? 'selected' : ''}>${s}</option>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-filter"></i> Filtrer
-                </button>
-            </div>
-            <div class="col-md-2">
-                <a href="${pageContext.request.contextPath}/paiements" class="btn btn-secondary w-100">
-                    <i class="fas fa-undo"></i> Réinitialiser
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Résumé des paiements -->
-<c:if test="${not empty inscription}">
+<!-- Résumé des paiements pour l'étudiant -->
+<c:if test="<%= isEtudiant %>">
     <div class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h6 class="card-title">Total payé</h6>
-                    <h3>${totalPaye} €</h3>
+                    <h3>${totalPaye != null ? totalPaye : '0'} €</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-danger text-white">
                 <div class="card-body">
                     <h6 class="card-title">Reste à payer</h6>
-                    <h3>${totalRestant} €</h3>
+                    <h3>${totalRestant != null ? totalRestant : '0'} €</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Étudiant</h6>
-                    <h5>${inscription.etudiant.prenom} ${inscription.etudiant.nom}</h5>
+    </div>
+</c:if>
+
+<!-- Filtres - Uniquement pour les administrateurs -->
+<c:if test="<%= !isEtudiant %>">
+    <div class="card mb-3">
+        <div class="card-body">
+            <form action="${pageContext.request.contextPath}/paiements" method="get" class="row g-2">
+                <div class="col-md-4">
+                    <select name="inscriptionId" class="form-select">
+                        <option value="">Toutes les inscriptions</option>
+                        <c:forEach items="${inscriptions}" var="i">
+                            <option value="${i.id}" ${param.inscriptionId == i.id ? 'selected' : ''}>
+                                    ${i.etudiant.matricule} - ${i.etudiant.prenom} ${i.etudiant.nom}
+                            </option>
+                        </c:forEach>
+                    </select>
                 </div>
-            </div>
+                <div class="col-md-4">
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <c:forEach items="${statuts}" var="s">
+                            <option value="${s}" ${param.statut == s ? 'selected' : ''}>${s}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <a href="${pageContext.request.contextPath}/paiements" class="btn btn-secondary w-100">
+                        <i class="fas fa-undo"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </c:if>
@@ -102,21 +119,25 @@
                 <thead>
                 <tr>
                     <th>#</th>
-                    <th>Étudiant</th>
+                    <c:if test="<%= !isEtudiant %>">
+                        <th>Étudiant</th>
+                    </c:if>
                     <th>Type de frais</th>
                     <th>Montant total</th>
                     <th>Payé</th>
                     <th>Reste</th>
                     <th>Statut</th>
                     <th>Date limite</th>
-                    <th class="text-center">Actions</th>
+                    <c:if test="<%= !isEtudiant %>">
+                        <th class="text-center">Actions</th>
+                    </c:if>
                 </tr>
                 </thead>
                 <tbody>
                 <c:choose>
                     <c:when test="${empty paiements}">
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-muted">
+                            <td colspan="${isEtudiant ? 7 : 9}" class="text-center py-4 text-muted">
                                 <i class="fas fa-inbox fa-2x d-block mb-2"></i>
                                 Aucun paiement trouvé
                             </td>
@@ -126,11 +147,13 @@
                         <c:forEach items="${paiements}" var="p" varStatus="status">
                             <tr>
                                 <td>${status.index + 1}</td>
-                                <td>
-                                        ${p.inscription.etudiant.prenom} ${p.inscription.etudiant.nom}
-                                    <br>
-                                    <small class="text-muted">${p.inscription.etudiant.matricule}</small>
-                                </td>
+                                <c:if test="<%= !isEtudiant %>">
+                                    <td>
+                                            ${p.inscription.etudiant.prenom} ${p.inscription.etudiant.nom}
+                                        <br>
+                                        <small class="text-muted">${p.inscription.etudiant.matricule}</small>
+                                    </td>
+                                </c:if>
                                 <td>
                                     <span class="badge bg-info">${p.typeFrais}</span>
                                 </td>
@@ -148,17 +171,19 @@
                                 <td>
                                     <fmt:formatDate value="${p.dateLimite}" pattern="dd/MM/yyyy"/>
                                 </td>
-                                <td class="text-center">
-                                    <a href="${pageContext.request.contextPath}/paiements/detail/${p.id}"
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="${pageContext.request.contextPath}/paiements/supprimer/${p.id}"
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Supprimer ce paiement ?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </td>
+                                <c:if test="<%= !isEtudiant %>">
+                                    <td class="text-center">
+                                        <a href="${pageContext.request.contextPath}/paiements/detail/${p.id}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="${pageContext.request.contextPath}/paiements/supprimer/${p.id}"
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Supprimer ce paiement ?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </c:if>
                             </tr>
                         </c:forEach>
                     </c:otherwise>
@@ -172,4 +197,11 @@
     </div>
 </div>
 
-<jsp:include page="../fragments/footer.jsp"/>
+<c:choose>
+    <c:when test="<%= isEtudiant %>">
+        <jsp:include page="../fragments/footer-commun.jsp"/>
+    </c:when>
+    <c:otherwise>
+        <jsp:include page="../fragments/footer.jsp"/>
+    </c:otherwise>
+</c:choose>

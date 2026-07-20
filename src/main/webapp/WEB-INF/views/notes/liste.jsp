@@ -30,42 +30,55 @@
 </c:if>
 
 <!-- Filtres -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form action="${pageContext.request.contextPath}/notes" method="get" class="row g-2">
-            <div class="col-md-4">
-                <select name="inscriptionId" class="form-select">
-                    <option value="">Toutes les inscriptions</option>
-                    <c:forEach items="${inscriptions}" var="i">
-                        <option value="${i.id}" ${param.inscriptionId == i.id ? 'selected' : ''}>
-                                ${i.etudiant.matricule} - ${i.etudiant.prenom} ${i.etudiant.nom}
-                        </option>
-                    </c:forEach>
-                </select>
+
+<c:choose>
+    <c:when test="${isEtudiant}">
+        <!-- Étudiant : pas de filtres, juste un message -->
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            Voici la liste de vos notes.
+        </div>
+    </c:when>
+    <c:otherwise>
+        <!-- Administrateur : afficher les filtres -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form action="${pageContext.request.contextPath}/notes" method="get" class="row g-2">
+                    <div class="col-md-4">
+                        <select name="inscriptionId" class="form-select">
+                            <option value="">Toutes les inscriptions</option>
+                            <c:forEach items="${inscriptions}" var="i">
+                                <option value="${i.id}" ${param.inscriptionId == i.id ? 'selected' : ''}>
+                                        ${i.etudiant.matricule} - ${i.etudiant.prenom} ${i.etudiant.nom}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="matiereId" class="form-select">
+                            <option value="">Toutes les matières</option>
+                            <c:forEach items="${matieres}" var="m">
+                                <option value="${m.id}" ${param.matiereId == m.id ? 'selected' : ''}>
+                                        ${m.code} - ${m.nom}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filtrer
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="${pageContext.request.contextPath}/notes" class="btn btn-secondary w-100">
+                            <i class="fas fa-undo"></i> Réinitialiser
+                        </a>
+                    </div>
+                </form>
             </div>
-            <div class="col-md-4">
-                <select name="matiereId" class="form-select">
-                    <option value="">Toutes les matières</option>
-                    <c:forEach items="${matieres}" var="m">
-                        <option value="${m.id}" ${param.matiereId == m.id ? 'selected' : ''}>
-                                ${m.code} - ${m.nom}
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-filter"></i> Filtrer
-                </button>
-            </div>
-            <div class="col-md-2">
-                <a href="${pageContext.request.contextPath}/notes" class="btn btn-secondary w-100">
-                    <i class="fas fa-undo"></i> Réinitialiser
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
+    </c:otherwise>
+</c:choose>
 
 <!-- Moyenne générale -->
 <c:if test="${not empty inscription and not empty moyenneGenerale}">
