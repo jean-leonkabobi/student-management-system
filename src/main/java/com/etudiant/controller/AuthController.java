@@ -1,6 +1,7 @@
 package com.etudiant.controller;
 
 import com.etudiant.model.Utilisateur;
+import com.etudiant.model.Utilisateur.Role;
 import com.etudiant.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,6 @@ public class AuthController {
 
     @GetMapping("/login")
     public String loginPage(HttpSession session, Model model) {
-        // Si déjà connecté, rediriger vers le dashboard
         if (session.getAttribute("utilisateur") != null) {
             return "redirect:/dashboard";
         }
@@ -41,8 +41,9 @@ public class AuthController {
             Utilisateur utilisateur = utilisateurService.findByUsername(username).orElse(null);
             session.setAttribute("utilisateur", utilisateur);
             session.setAttribute("role", utilisateur != null ? utilisateur.getRole() : null);
+            session.setAttribute("username", utilisateur != null ? utilisateur.getUsername() : null);
 
-            log.info("Utilisateur connecté: {}", username);
+            log.info("Utilisateur connecté: {} avec rôle: {}", username, utilisateur != null ? utilisateur.getRole() : "null");
             return "redirect:/dashboard";
         } else {
             redirectAttributes.addFlashAttribute("error", "Nom d'utilisateur ou mot de passe incorrect");
@@ -63,22 +64,49 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(Utilisateur utilisateur,
+    public String register(@RequestParam String username,
+                           @RequestParam String email,
+                           @RequestParam String passwordHash,
                            @RequestParam String confirmPassword,
+                           @RequestParam(required = false, defaultValue = "ETUDIANT") String role,
                            RedirectAttributes redirectAttributes) {
 
-        if (!utilisateur.getPasswordHash().equals(confirmPassword)) {
+        log.debug("Tentative d'inscription: {}", username);
+
+        // Vérifier que les mots de passe correspondent
+        if (!passwordHash.equals(confirmPassword)) {
             redirectAttributes.addFlashAttribute("error", "Les mots de passe ne correspondent pas");
             return "redirect:/register";
         }
 
-        if (utilisateurService.findByUsername(utilisateur.getUsername()).isPresent()) {
+        // Vérifier que le nom d'utilisateur n'existe pas déjà
+        if (utilisateurService.findByUsername(username).isPresent()) {
             redirectAttributes.addFlashAttribute("error", "Ce nom d'utilisateur existe déjà");
             return "redirect:/register";
         }
 
+        // Vérifier que l'email n'existe pas déjà
+        if (utilisateurService.findByEmail(email).isPresent()) {
+            redirectAttributes.addFlashAttribute("error", "Cet email existe déjà");
+            return "redirect:/register";
+        }
+
+        // Créer l'utilisateur
+        Utilisateur utilisateur = new Utilisateur();
+        utilisateur.setUsername(username);
+        utilisateur.setEmail(email);
+        utilisateur.setPasswordHash(passwordHash);
+        utilisateur.setEstActif(true);
+
+        try {
+            utilisateur.setRole(Role.valueOf(role));
+        } catch (IllegalArgumentException e) {
+            utilisateur.setRole(Role.ETUDIANT);
+        }
+
         utilisateurService.save(utilisateur);
-        redirectAttributes.addFlashAttribute("success", "Inscription réussie ! Connectez-vous.");
+        redirectAttributes.addFlashAttribute("success", "Inscription réussie ! Vous pouvez maintenant vous connecter.");
+
         return "redirect:/login";
     }
 }

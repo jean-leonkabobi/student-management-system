@@ -1,115 +1,99 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<jsp:include page="../fragments/header.jsp"/>
+<jsp:include page="../fragments/header-etudiant.jsp"/>
 
-<!-- Statistiques -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h6 class="card-title"><i class="fas fa-users"></i> Étudiants</h6>
-                <h2 class="mb-0">${totalEtudiants}</h2>
+<!-- Message de bienvenue -->
+<div class="alert alert-primary border-0 shadow-sm" style="background: linear-gradient(135deg, #2563EB, #1E40AF); color: white; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+    <h4 style="margin-bottom: 4px;"><i class="fas fa-user-graduate"></i> Bienvenue ${username} !</h4>
+    <p style="margin-bottom: 0; opacity: 0.85;">Vous êtes connecté en tant que <strong>${role}</strong>.</p>
+</div>
+
+<!-- Cards -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card-modern text-center" style="padding: 32px 24px;">
+            <div style="width: 64px; height: 64px; background: rgba(37, 99, 235, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <i class="fas fa-id-card" style="font-size: 28px; color: #2563EB;"></i>
             </div>
+            <h5 style="font-weight: 600; margin-bottom: 8px;">Mes informations</h5>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Consulter vos informations personnelles</p>
+            <a href="#" class="btn btn-primary" style="background: #2563EB; border: none; padding: 8px 24px; border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: all 0.15s;">
+                <i class="fas fa-arrow-right"></i> Accéder
+            </a>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h6 class="card-title"><i class="fas fa-chalkboard-teacher"></i> Enseignants</h6>
-                <h2 class="mb-0">${totalEnseignants}</h2>
+
+    <div class="col-md-4">
+        <div class="card-modern text-center" style="padding: 32px 24px;">
+            <div style="width: 64px; height: 64px; background: rgba(34, 197, 94, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <i class="fas fa-file-alt" style="font-size: 28px; color: #22C55E;"></i>
             </div>
+            <h5 style="font-weight: 600; margin-bottom: 8px;">Mes notes</h5>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Consulter vos notes par matière</p>
+            <a href="${pageContext.request.contextPath}/notes" class="btn btn-success" style="background: #22C55E; border: none; padding: 8px 24px; border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: all 0.15s;">
+                <i class="fas fa-arrow-right"></i> Accéder
+            </a>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h6 class="card-title"><i class="fas fa-book"></i> Matières</h6>
-                <h2 class="mb-0">${totalMatieres}</h2>
+
+    <div class="col-md-4">
+        <div class="card-modern text-center" style="padding: 32px 24px;">
+            <div style="width: 64px; height: 64px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <i class="fas fa-calendar-alt" style="font-size: 28px; color: #F59E0B;"></i>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <h6 class="card-title"><i class="fas fa-coins"></i> Paiements</h6>
-                <h2 class="mb-0"><fmt:formatNumber value="${totalPaiementsMontant}" type="currency" currencySymbol="€"/></h2>
-            </div>
+            <h5 style="font-weight: 600; margin-bottom: 8px;">Emploi du temps</h5>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Voir votre emploi du temps</p>
+            <a href="#" class="btn btn-warning" style="background: #F59E0B; border: none; padding: 8px 24px; border-radius: 8px; color: white; text-decoration: none; font-weight: 500; transition: all 0.15s;">
+                <i class="fas fa-arrow-right"></i> Accéder
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Graphiques (simulés avec Bootstrap) -->
-<div class="row g-3">
+<!-- Section paiements -->
+<div class="row mt-4">
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-chart-pie"></i> Étudiants par statut</h5>
+        <div class="card-modern">
+            <h5 style="font-weight: 600; margin-bottom: 16px;">
+                <i class="fas fa-coins" style="color: #2563EB;"></i> Mes paiements
+            </h5>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                <span style="color: var(--text-secondary);">Total payé</span>
+                <span style="font-weight: 600; color: #22C55E;">0 €</span>
             </div>
-            <div class="card-body">
-                <c:forEach items="${etudiantsParStatut}" var="entry">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>${entry.key}</span>
-                        <span class="badge bg-primary">${entry.value}</span>
-                    </div>
-                    <div class="progress mb-2" style="height: 8px;">
-                        <div class="progress-bar bg-primary"
-                             style="width: ${totalEtudiants > 0 ? (entry.value / totalEtudiants * 100) : 0}%;">
-                        </div>
-                    </div>
-                </c:forEach>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                <span style="color: var(--text-secondary);">Reste à payer</span>
+                <span style="font-weight: 600; color: #EF4444;">0 €</span>
             </div>
+            <a href="${pageContext.request.contextPath}/paiements" class="btn btn-outline-primary w-100 mt-2" style="border-color: #2563EB; color: #2563EB; border-radius: 8px; padding: 10px; text-decoration: none; text-align: center; font-weight: 500;">
+                Voir tous mes paiements
+            </a>
         </div>
     </div>
+
     <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-chart-bar"></i> Paiements par statut</h5>
+        <div class="card-modern">
+            <h5 style="font-weight: 600; margin-bottom: 16px;">
+                <i class="fas fa-graduation-cap" style="color: #2563EB;"></i> Mes inscriptions
+            </h5>
+            <div style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Filière</span>
+                    <span style="font-weight: 500;">-</span>
+                </div>
             </div>
-            <div class="card-body">
-                <c:forEach items="${paiementsParStatut}" var="entry">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span>${entry.key}</span>
-                        <span class="badge bg-success">${entry.value}</span>
-                    </div>
-                    <div class="progress mb-2" style="height: 8px;">
-                        <div class="progress-bar bg-success"
-                             style="width: ${totalPaiements > 0 ? (entry.value / totalPaiements * 100) : 0}%;">
-                        </div>
-                    </div>
-                </c:forEach>
+            <div style="padding: 12px 0;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-secondary);">Niveau</span>
+                    <span style="font-weight: 500;">-</span>
+                </div>
             </div>
+            <a href="${pageContext.request.contextPath}/inscriptions" class="btn btn-outline-primary w-100 mt-2" style="border-color: #2563EB; color: #2563EB; border-radius: 8px; padding: 10px; text-decoration: none; text-align: center; font-weight: 500;">
+                Voir mes inscriptions
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Informations supplémentaires -->
-<div class="row g-3 mt-2">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6><i class="fas fa-graduation-cap"></i> Inscriptions</h6>
-                <h3>${totalInscriptions}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6><i class="fas fa-layer-group"></i> Filières</h6>
-                <h3>${totalFilieres}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h6><i class="fas fa-calculator"></i> Moyenne générale</h6>
-                <h3>${moyenneGenerale != null ? moyenneGenerale : '-'}</h3>
-            </div>
-        </div>
-    </div>
-</div>
-
-<jsp:include page="../fragments/footer.jsp"/>
+<jsp:include page="../fragments/footer-etudiant.jsp"/>
