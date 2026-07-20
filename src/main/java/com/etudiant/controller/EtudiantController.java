@@ -253,18 +253,16 @@ public class EtudiantController {
     }
 
     /**
-     * Recherche multicritère
+     * Recherche multicritère avancée avec JSON (pour l'API)
      */
-    @GetMapping("/recherche")
-    public String recherche(
+    @GetMapping("/api/recherche")
+    @ResponseBody
+    public List<Etudiant> rechercheApi(
             @RequestParam(required = false) String matricule,
             @RequestParam(required = false) String nom,
             @RequestParam(required = false) String prenom,
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) String statut,
-            Model model) {
-
-        log.debug("Recherche multicritère");
+            @RequestParam(required = false) String statut) {
 
         StatutEtudiant statutEnum = null;
         if (statut != null && !statut.isEmpty()) {
@@ -275,19 +273,6 @@ public class EtudiantController {
             }
         }
 
-        List<Etudiant> etudiants = etudiantService.rechercheMultiCritere(
-                matricule, nom, prenom, email, statutEnum);
-
-        model.addAttribute("etudiants", etudiants);
-        model.addAttribute("matricule", matricule);
-        model.addAttribute("nom", nom);
-        model.addAttribute("prenom", prenom);
-        model.addAttribute("email", email);
-        model.addAttribute("statut", statut);
-        model.addAttribute("statuts", StatutEtudiant.values());
-        model.addAttribute("pageActive", "etudiants");
-        model.addAttribute("pageTitle", "Recherche d'Étudiants");
-
-        return "etudiants/recherche";
+        return etudiantService.rechercheMultiCritere(matricule, nom, prenom, email, statutEnum);
     }
 }
