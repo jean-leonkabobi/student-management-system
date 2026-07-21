@@ -51,6 +51,10 @@ public class Matiere {
     @JoinColumn(name = "niveau_id")
     private Niveau niveau;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enseignant_id")
+    private Enseignant enseignant;
+
     @OneToMany(mappedBy = "matiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Note> notes = new ArrayList<>();
 

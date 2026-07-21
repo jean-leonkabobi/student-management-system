@@ -21,5 +21,7 @@ public interface MatiereRepository extends JpaRepository<Matiere, Long> {
 
     List<Matiere> findBySemestre(Semestre semestre);
 
+    List<Matiere> findByEnseignantId(Long enseignantId);
+
     boolean existsByCode(String code);
 }

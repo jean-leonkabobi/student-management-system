@@ -22,6 +22,8 @@ public interface MatiereService {
 
     List<Matiere> findBySemestre(Semestre semestre);
 
+    List<Matiere> findByEnseignantId(Long enseignantId);
+
     Matiere save(Matiere matiere);
 
     Matiere update(Matiere matiere);

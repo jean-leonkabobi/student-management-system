@@ -56,6 +56,11 @@ public class MatiereServiceImpl implements MatiereService {
     }
 
     @Override
+    public List<Matiere> findByEnseignantId(Long enseignantId) {
+        return matiereRepository.findByEnseignantId(enseignantId);
+    }
+
+    @Override
     public Matiere save(Matiere matiere) {
         log.info("Sauvegarde de la matière: {}", matiere.getCode());
         return matiereRepository.save(matiere);
