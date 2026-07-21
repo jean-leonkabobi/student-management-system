@@ -29,7 +29,7 @@
             </div>
             <h5 style="font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Mes cours</h5>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">Voir la liste de vos cours</p>
-            <a href="#" class="btn-card" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; transition: all 0.15s; background: #2563EB; color: white;">
+            <a href="${pageContext.request.contextPath}/cours" class="btn-card" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; transition: all 0.15s; background: #2563EB; color: white;">
                 <i class="fas fa-arrow-right"></i> Accéder
             </a>
         </div>

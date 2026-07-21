@@ -403,7 +403,8 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="${pageContext.request.contextPath}/cours"
+                       class="nav-link ${pageActive == 'cours' ? 'active' : ''}">
                         <i class="fas fa-book-open"></i>
                         Mes cours
                     </a>
