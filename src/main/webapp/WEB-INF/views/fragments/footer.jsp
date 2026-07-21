@@ -1,13 +1,43 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
-<footer class="text-center text-muted mt-4 pt-3 border-top">
-    <p class="mb-1">
-        <i class="fas fa-graduation-cap"></i> Gestion des Étudiants - Spring MVC avec JSP &amp; JSTL
+</div> <!-- Fin page-content -->
+
+<!-- Footer -->
+<footer style="text-align: center; color: #94A3B8; font-size: 13px; padding: 20px 32px; border-top: 1px solid #E2E8F0; margin-top: 20px;">
+    <p style="margin-bottom: 4px;">
+        <i class="fas fa-graduation-cap" style="color: #2563EB;"></i>
+        Gestion des Étudiants - Spring MVC avec JSP &amp; JSTL
     </p>
-    <small>&copy; 2024 - Projet scolaire</small>
+    <p style="margin-bottom: 0; font-size: 12px;">
+        &copy; 2026 - Projet scolaire - Tous droits réservés
+    </p>
 </footer>
+
+</main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ========================================== -->
+<!-- JAVASCRIPT -->
+<!-- ========================================== -->
+<script>
+    // Toggle du menu sur mobile
+    document.getElementById('menuToggle').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+    });
+
+    // Fermer le menu en cliquant sur l'overlay
+    document.getElementById('sidebarOverlay').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js">
+</script>
 </body>
 </html>

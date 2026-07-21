@@ -63,6 +63,11 @@
                 </div>
             </div>
 
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Mot de passe</label>
+                <input type="text" name="motDePasse" class="form-control" placeholder="Laisser vide pour générer automatiquement">
+            </div>
+
             <div class="d-flex gap-2">
                 <a href="${pageContext.request.contextPath}/enseignants" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Annuler

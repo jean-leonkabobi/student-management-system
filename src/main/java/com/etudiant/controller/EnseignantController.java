@@ -1,7 +1,10 @@
 package com.etudiant.controller;
 
 import com.etudiant.model.Enseignant;
+import com.etudiant.model.Utilisateur;
+import com.etudiant.model.Utilisateur.Role;
 import com.etudiant.service.EnseignantService;
+import com.etudiant.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -35,6 +38,7 @@ public class EnseignantController {
 
     private static final String MSG_SUCCESS = "success";
     private static final String MSG_ERROR = "error";
+    private static final String MSG_INFO = "info";
     private static final String PAGE_ACTIVE_VALUE = "enseignants";
 
     private static final String TITLE_LISTE = "Liste des Enseignants";
@@ -45,6 +49,7 @@ public class EnseignantController {
     // SERVICES
     // ==========================================
     private final EnseignantService enseignantService;
+    private final UtilisateurService utilisateurService; // ⬅️ AJOUTÉ
 
     // ==========================================
     // MÉTHODES
@@ -106,8 +111,44 @@ public class EnseignantController {
             return VIEW_FORM;
         }
 
-        enseignantService.save(enseignant);
-        redirectAttributes.addFlashAttribute(MSG_SUCCESS, "Enseignant ajouté avec succès !");
+        // Sauvegarder l'enseignant
+        Enseignant savedEnseignant = enseignantService.save(enseignant);
+
+        // Générer un mot de passe aléatoire
+        String motDePasse = generateRandomPassword();
+
+        // Créer le compte utilisateur pour l'enseignant
+        try {
+            Utilisateur utilisateur = new Utilisateur();
+            utilisateur.setUsername(enseignant.getEmail());
+            utilisateur.setPasswordHash(motDePasse);
+            utilisateur.setEmail(enseignant.getEmail());
+            utilisateur.setRole(Role.ENSEIGNANT);
+            utilisateur.setEnseignant(savedEnseignant);
+            utilisateur.setEstActif(true);
+
+            utilisateurService.save(utilisateur);
+
+            // Afficher le mot de passe dans la console
+            log.info("==================================================");
+            log.info("👨‍🏫 ENSEIGNANT CRÉÉ AVEC SUCCÈS !");
+            log.info("   Nom: {}", enseignant.getNomComplet());
+            log.info("   Email: {}", enseignant.getEmail());
+            log.info("   Matricule: {}", enseignant.getMatricule());
+            log.info("   🔑 Mot de passe: {}", motDePasse);
+            log.info("==================================================");
+
+            redirectAttributes.addFlashAttribute(MSG_SUCCESS,
+                    "Enseignant ajouté avec succès ! Un compte utilisateur a été créé.");
+            redirectAttributes.addFlashAttribute(MSG_INFO,
+                    "Mot de passe: " + motDePasse + " (à communiquer à l'enseignant)");
+
+        } catch (Exception e) {
+            log.error("Erreur lors de la création du compte utilisateur: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute(MSG_SUCCESS,
+                    "Enseignant ajouté avec succès ! Mais le compte utilisateur n'a pas pu être créé.");
+        }
+
         return REDIRECT_LISTE;
     }
 
@@ -165,5 +206,18 @@ public class EnseignantController {
         enseignantService.deleteById(id);
         redirectAttributes.addFlashAttribute(MSG_SUCCESS, "Enseignant supprimé !");
         return REDIRECT_LISTE;
+    }
+
+    /**
+     * Génère un mot de passe aléatoire de 8 caractères
+     */
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            int index = (int) (Math.random() * chars.length());
+            sb.append(chars.charAt(index));
+        }
+        return sb.toString();
     }
 }
