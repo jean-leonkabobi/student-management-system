@@ -49,15 +49,12 @@ public class EnseignantController {
     // SERVICES
     // ==========================================
     private final EnseignantService enseignantService;
-    private final UtilisateurService utilisateurService; // ⬅️ AJOUTÉ
+    private final UtilisateurService utilisateurService;
 
     // ==========================================
     // MÉTHODES
     // ==========================================
 
-    /**
-     * Affiche la liste des enseignants
-     */
     @GetMapping
     public String liste(
             @RequestParam(required = false) String search,
@@ -80,9 +77,6 @@ public class EnseignantController {
         return VIEW_LISTE;
     }
 
-    /**
-     * Affiche le formulaire d'ajout
-     */
     @GetMapping("/ajouter")
     public String ajouterForm(Model model) {
         model.addAttribute(ATTR_ENSEIGNANT, new Enseignant());
@@ -91,9 +85,6 @@ public class EnseignantController {
         return VIEW_FORM;
     }
 
-    /**
-     * Traite l'ajout d'un enseignant
-     */
     @PostMapping("/ajouter")
     public String ajouter(
             @Valid @ModelAttribute(ATTR_ENSEIGNANT) Enseignant enseignant,
@@ -117,10 +108,13 @@ public class EnseignantController {
         // Générer un mot de passe aléatoire
         String motDePasse = generateRandomPassword();
 
+        // Générer le nom d'utilisateur à partir du nom, prénom et postnom
+        String username = generateUsername(enseignant);
+
         // Créer le compte utilisateur pour l'enseignant
         try {
             Utilisateur utilisateur = new Utilisateur();
-            utilisateur.setUsername(enseignant.getEmail());
+            utilisateur.setUsername(username);
             utilisateur.setPasswordHash(motDePasse);
             utilisateur.setEmail(enseignant.getEmail());
             utilisateur.setRole(Role.ENSEIGNANT);
@@ -129,19 +123,20 @@ public class EnseignantController {
 
             utilisateurService.save(utilisateur);
 
-            // Afficher le mot de passe dans la console
+            // Afficher les identifiants dans la console
             log.info("==================================================");
             log.info("👨‍🏫 ENSEIGNANT CRÉÉ AVEC SUCCÈS !");
             log.info("   Nom: {}", enseignant.getNomComplet());
             log.info("   Email: {}", enseignant.getEmail());
             log.info("   Matricule: {}", enseignant.getMatricule());
+            log.info("   👤 Nom d'utilisateur: {}", username);
             log.info("   🔑 Mot de passe: {}", motDePasse);
             log.info("==================================================");
 
             redirectAttributes.addFlashAttribute(MSG_SUCCESS,
                     "Enseignant ajouté avec succès ! Un compte utilisateur a été créé.");
             redirectAttributes.addFlashAttribute(MSG_INFO,
-                    "Mot de passe: " + motDePasse + " (à communiquer à l'enseignant)");
+                    "Nom d'utilisateur: " + username + " | Mot de passe: " + motDePasse + " (à communiquer à l'enseignant)");
 
         } catch (Exception e) {
             log.error("Erreur lors de la création du compte utilisateur: {}", e.getMessage());
@@ -152,9 +147,6 @@ public class EnseignantController {
         return REDIRECT_LISTE;
     }
 
-    /**
-     * Affiche le formulaire de modification
-     */
     @GetMapping("/modifier/{id}")
     public String modifierForm(
             @PathVariable Long id,
@@ -174,9 +166,6 @@ public class EnseignantController {
                 });
     }
 
-    /**
-     * Traite la modification d'un enseignant
-     */
     @PostMapping("/modifier")
     public String modifier(
             @Valid @ModelAttribute(ATTR_ENSEIGNANT) Enseignant enseignant,
@@ -195,9 +184,6 @@ public class EnseignantController {
         return REDIRECT_LISTE;
     }
 
-    /**
-     * Supprime un enseignant
-     */
     @GetMapping("/supprimer/{id}")
     public String supprimer(
             @PathVariable Long id,
@@ -206,6 +192,38 @@ public class EnseignantController {
         enseignantService.deleteById(id);
         redirectAttributes.addFlashAttribute(MSG_SUCCESS, "Enseignant supprimé !");
         return REDIRECT_LISTE;
+    }
+
+    // ==========================================
+    // MÉTHODES PRIVÉES
+    // ==========================================
+
+    /**
+     * Génère un nom d'utilisateur à partir du nom, prénom et postnom
+     * Exemple: Dupont Marie Jean → dupont.marie.jean
+     */
+    private String generateUsername(Enseignant enseignant) {
+        StringBuilder sb = new StringBuilder();
+
+        // Ajouter le nom
+        if (enseignant.getNom() != null && !enseignant.getNom().isEmpty()) {
+            sb.append(enseignant.getNom().toLowerCase());
+        }
+
+        // Ajouter le prénom
+        if (enseignant.getPrenom() != null && !enseignant.getPrenom().isEmpty()) {
+            if (sb.length() > 0) sb.append(".");
+            sb.append(enseignant.getPrenom().toLowerCase());
+        }
+
+        // Ajouter le postnom (s'il existe)
+        if (enseignant.getPostnom() != null && !enseignant.getPostnom().isEmpty()) {
+            if (sb.length() > 0) sb.append(".");
+            sb.append(enseignant.getPostnom().toLowerCase());
+        }
+
+        // Remplacer les espaces par des points
+        return sb.toString().replace(" ", ".");
     }
 
     /**

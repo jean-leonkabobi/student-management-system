@@ -429,7 +429,8 @@
                 <li class="nav-label">Mon Compte</li>
 
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="${pageContext.request.contextPath}/enseignant/profil"
+                       class="nav-link ${pageActive == 'profil' ? 'active' : ''}">
                         <i class="fas fa-user"></i>
                         Mon profil
                     </a>
