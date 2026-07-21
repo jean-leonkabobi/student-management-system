@@ -31,8 +31,34 @@ public class EtudiantController {
     private final FiliereService filiereService;
     private final NiveauService niveauService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES PUBLIQUES
+    // ==========================================
+
     /**
-     * Affiche la liste des étudiants - Réservé aux administrateurs
+     * Affiche la liste des étudiants - ADMIN et SCOLARITE uniquement
      */
     @GetMapping
     public String liste(
@@ -42,11 +68,8 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Un étudiant ne peut pas voir la liste des autres étudiants
-        if (role == Role.ETUDIANT) {
+        // L'étudiant ne peut pas voir la liste des autres étudiants
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas accès à la liste des étudiants.");
             return "redirect:/dashboard";
         }
@@ -75,13 +98,13 @@ public class EtudiantController {
         model.addAttribute("totalEtudiants", etudiantService.countTotal());
         model.addAttribute("pageActive", "etudiants");
         model.addAttribute("pageTitle", "Liste des Étudiants");
-        model.addAttribute("role", role);
+        model.addAttribute("role", getRole(session));
 
         return "etudiants/liste";
     }
 
     /**
-     * Affiche le formulaire d'ajout - Réservé aux administrateurs
+     * Affiche le formulaire d'ajout - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/ajouter")
     public String ajouterForm(
@@ -89,11 +112,7 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les admins peuvent ajouter des étudiants
-        if (role != Role.ADMIN && role != Role.SCOLARITE) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'ajouter des étudiants.");
             return "redirect:/etudiants";
         }
@@ -105,13 +124,13 @@ public class EtudiantController {
         model.addAttribute("niveaux", niveauService.findAll());
         model.addAttribute("pageActive", "etudiants");
         model.addAttribute("pageTitle", "Ajouter un Étudiant");
-        model.addAttribute("role", role);
+        model.addAttribute("role", getRole(session));
 
         return "etudiants/ajouter";
     }
 
     /**
-     * Traite l'ajout d'un étudiant - Réservé aux administrateurs
+     * Traite l'ajout d'un étudiant - ADMIN et SCOLARITE uniquement
      */
     @PostMapping("/ajouter")
     public String ajouter(
@@ -121,10 +140,7 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role != Role.ADMIN && role != Role.SCOLARITE) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'ajouter des étudiants.");
             return "redirect:/etudiants";
         }
@@ -147,9 +163,7 @@ public class EtudiantController {
         }
 
         try {
-            // Génération automatique du matricule
             etudiant.setMatricule(etudiantService.generateMatricule());
-
             Etudiant saved = etudiantService.save(etudiant);
             log.info("Étudiant ajouté avec succès: {}", saved.getMatricule());
 
@@ -170,7 +184,7 @@ public class EtudiantController {
     }
 
     /**
-     * Affiche le formulaire de modification - Réservé aux administrateurs
+     * Affiche le formulaire de modification - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/modifier/{id}")
     public String modifierForm(
@@ -179,11 +193,7 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les admins peuvent modifier
-        if (role != Role.ADMIN && role != Role.SCOLARITE) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de modifier des étudiants.");
             return "redirect:/etudiants";
         }
@@ -206,7 +216,7 @@ public class EtudiantController {
     }
 
     /**
-     * Traite la modification d'un étudiant - Réservé aux administrateurs
+     * Traite la modification d'un étudiant - ADMIN et SCOLARITE uniquement
      */
     @PostMapping("/modifier")
     public String modifier(
@@ -216,17 +226,13 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role != Role.ADMIN && role != Role.SCOLARITE) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de modifier des étudiants.");
             return "redirect:/etudiants";
         }
 
         log.debug("Traitement de la modification: {}", etudiant.getId());
 
-        // Vérifier si l'email existe déjà (sauf pour l'étudiant lui-même)
         if (etudiant.getEmail() != null && !etudiant.getEmail().isEmpty()) {
             etudiantService.findByEmail(etudiant.getEmail())
                     .ifPresent(existing -> {
@@ -248,9 +254,7 @@ public class EtudiantController {
             etudiantService.update(etudiant);
             log.info("Étudiant modifié avec succès: {}", etudiant.getMatricule());
 
-            redirectAttributes.addFlashAttribute("success",
-                    "Étudiant modifié avec succès !");
-
+            redirectAttributes.addFlashAttribute("success", "Étudiant modifié avec succès !");
             return "redirect:/etudiants";
 
         } catch (IllegalArgumentException e) {
@@ -265,7 +269,7 @@ public class EtudiantController {
     }
 
     /**
-     * Supprime un étudiant - Réservé aux administrateurs
+     * Supprime un étudiant - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/supprimer/{id}")
     public String supprimer(
@@ -273,11 +277,7 @@ public class EtudiantController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les admins peuvent supprimer
-        if (role != Role.ADMIN && role != Role.SCOLARITE) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de supprimer des étudiants.");
             return "redirect:/etudiants";
         }
@@ -293,9 +293,7 @@ public class EtudiantController {
                                 redirectAttributes.addFlashAttribute("success",
                                         "Étudiant supprimé avec succès !");
                             },
-                            () -> {
-                                redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé");
-                            }
+                            () -> redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé")
                     );
         } catch (Exception e) {
             log.error("Erreur lors de la suppression: {}", e.getMessage());
@@ -307,7 +305,9 @@ public class EtudiantController {
     }
 
     /**
-     * Affiche le détail d'un étudiant - Adaptée selon le rôle
+     * Affiche le détail d'un étudiant
+     * - ADMIN et SCOLARITE : voient tous les profils
+     * - ETUDIANT : voit uniquement son propre profil
      */
     @GetMapping("/detail/{id}")
     public String detail(
@@ -318,13 +318,11 @@ public class EtudiantController {
 
         log.debug("Affichage du détail de l'étudiant ID: {}", id);
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
         return etudiantService.findById(id)
                 .map(etudiant -> {
                     // Si c'est un étudiant, il ne peut voir que son propre profil
-                    if (role == Role.ETUDIANT) {
+                    if (isEtudiant(session)) {
+                        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
                         if (utilisateur.getEtudiant() != null) {
                             Long etudiantId = utilisateur.getEtudiant().getId();
                             if (!etudiantId.equals(id)) {
@@ -340,7 +338,7 @@ public class EtudiantController {
                     model.addAttribute("etudiant", etudiant);
                     model.addAttribute("pageActive", "etudiants");
                     model.addAttribute("pageTitle", "Détail de l'Étudiant");
-                    model.addAttribute("role", role);
+                    model.addAttribute("role", getRole(session));
                     return "etudiants/detail";
                 })
                 .orElseGet(() -> {
@@ -350,7 +348,7 @@ public class EtudiantController {
     }
 
     /**
-     * Recherche multicritère - Réservé aux administrateurs
+     * Recherche multicritère - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/recherche")
     public String recherche(
@@ -363,11 +361,7 @@ public class EtudiantController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les admins peuvent faire une recherche avancée
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas accès à la recherche avancée.");
             return "redirect:/dashboard";
         }
@@ -397,13 +391,13 @@ public class EtudiantController {
         model.addAttribute("niveaux", niveauService.findAll());
         model.addAttribute("pageActive", "recherche");
         model.addAttribute("pageTitle", "Recherche avancée");
-        model.addAttribute("role", role);
+        model.addAttribute("role", getRole(session));
 
         return "etudiants/recherche-avancee";
     }
 
     /**
-     * Recherche multicritère via API - Réservé aux administrateurs
+     * Recherche multicritère via API - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/api/recherche")
     @ResponseBody
@@ -415,11 +409,7 @@ public class EtudiantController {
             @RequestParam(required = false) String statut,
             HttpSession session) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Sécurité : seul un admin peut utiliser l'API
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             return List.of();
         }
 

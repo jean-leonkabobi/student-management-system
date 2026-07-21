@@ -31,6 +31,45 @@ public class PaiementController {
     private final PaiementService paiementService;
     private final InscriptionService inscriptionService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isComptable(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.COMPTABLE;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private boolean isAdminOrScolariteOrComptable(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE || role == Role.COMPTABLE;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES
+    // ==========================================
+
     /**
      * Liste des paiements - Adaptée selon le rôle
      */
@@ -49,7 +88,7 @@ public class PaiementController {
         List<Paiement> paiements;
         List<com.etudiant.model.Inscription> inscriptions;
 
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             // Étudiant : ne voit que ses paiements
             if (utilisateur.getEtudiant() != null) {
                 Long etudiantId = utilisateur.getEtudiant().getId();
@@ -98,7 +137,7 @@ public class PaiementController {
                 model.addAttribute("totalRestant", BigDecimal.ZERO);
             }
         } else {
-            // Administrateur, Scolarité, Comptable : voit tout
+            // ADMIN, SCOLARITE, COMPTABLE : voit tout
             if (inscriptionId != null) {
                 paiements = paiementService.findByInscriptionId(inscriptionId);
                 model.addAttribute("inscription", inscriptionService.findById(inscriptionId).orElse(null));
@@ -119,14 +158,14 @@ public class PaiementController {
         model.addAttribute("typesFrais", TypeFrais.values());
         model.addAttribute("moyensPaiement", MoyenPaiement.values());
         model.addAttribute("pageActive", "paiements");
-        model.addAttribute("pageTitle", role == Role.ETUDIANT ? "Mes Paiements" : "Liste des Paiements");
-        model.addAttribute("role", role);
+        model.addAttribute("pageTitle", isEtudiant(session) ? "Mes Paiements" : "Liste des Paiements");
+        model.addAttribute("role", getRole(session));
 
         return "paiements/liste";
     }
 
     /**
-     * Formulaire d'ajout - Réservé aux administrateurs, scolarité et comptables
+     * Formulaire d'ajout - ADMIN, SCOLARITE et COMPTABLE
      */
     @GetMapping("/ajouter")
     public String ajouterForm(
@@ -135,11 +174,7 @@ public class PaiementController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les admins, scolarité et comptables peuvent ajouter des paiements
-        if (role == Role.ETUDIANT || role == Role.ENSEIGNANT || role == Role.BIBLIOTHECAIRE) {
+        if (!isAdminOrScolariteOrComptable(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'ajouter des paiements.");
             return "redirect:/paiements";
         }
@@ -158,13 +193,13 @@ public class PaiementController {
         model.addAttribute("moyensPaiement", MoyenPaiement.values());
         model.addAttribute("pageActive", "paiements");
         model.addAttribute("pageTitle", "Nouveau Paiement");
-        model.addAttribute("role", role);
+        model.addAttribute("role", getRole(session));
 
         return "paiements/ajouter";
     }
 
     /**
-     * Traite l'ajout - Réservé aux administrateurs, scolarité et comptables
+     * Traite l'ajout - ADMIN, SCOLARITE et COMPTABLE
      */
     @PostMapping("/ajouter")
     public String ajouter(
@@ -174,10 +209,7 @@ public class PaiementController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role == Role.ETUDIANT || role == Role.ENSEIGNANT || role == Role.BIBLIOTHECAIRE) {
+        if (!isAdminOrScolariteOrComptable(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'ajouter des paiements.");
             return "redirect:/paiements";
         }
@@ -196,7 +228,6 @@ public class PaiementController {
             log.info("Paiement ajouté avec succès");
 
             redirectAttributes.addFlashAttribute("success", "Paiement ajouté avec succès !");
-
             return "redirect:/paiements?inscriptionId=" + paiement.getInscription().getId();
 
         } catch (Exception e) {
@@ -208,7 +239,7 @@ public class PaiementController {
     }
 
     /**
-     * Enregistrer un paiement (avec reçu) - Réservé aux administrateurs, scolarité et comptables
+     * Enregistrer un paiement (avec reçu) - ADMIN, SCOLARITE et COMPTABLE
      */
     @PostMapping("/enregistrer")
     public String enregistrerPaiement(
@@ -219,10 +250,7 @@ public class PaiementController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role == Role.ETUDIANT || role == Role.ENSEIGNANT || role == Role.BIBLIOTHECAIRE) {
+        if (!isAdminOrScolariteOrComptable(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'enregistrer des paiements.");
             return "redirect:/paiements";
         }
@@ -269,7 +297,7 @@ public class PaiementController {
         return paiementService.findById(id)
                 .map(paiement -> {
                     // Vérifier si l'étudiant a accès à ce paiement
-                    if (role == Role.ETUDIANT) {
+                    if (isEtudiant(session)) {
                         if (utilisateur.getEtudiant() != null) {
                             Long etudiantId = utilisateur.getEtudiant().getId();
                             Long inscriptionEtudiantId = paiement.getInscription().getEtudiant().getId();
@@ -287,7 +315,7 @@ public class PaiementController {
                     model.addAttribute("moyensPaiement", MoyenPaiement.values());
                     model.addAttribute("pageActive", "paiements");
                     model.addAttribute("pageTitle", "Détail du Paiement");
-                    model.addAttribute("role", role);
+                    model.addAttribute("role", getRole(session));
                     return "paiements/detail";
                 })
                 .orElseGet(() -> {
@@ -297,7 +325,7 @@ public class PaiementController {
     }
 
     /**
-     * Supprimer un paiement - Réservé aux administrateurs uniquement
+     * Supprimer un paiement - ADMIN, SCOLARITE et COMPTABLE
      */
     @GetMapping("/supprimer/{id}")
     public String supprimer(
@@ -305,11 +333,7 @@ public class PaiementController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les administrateurs peuvent supprimer des paiements
-        if (role != Role.ADMIN && role != Role.SCOLARITE && role != Role.COMPTABLE) {
+        if (!isAdminOrScolariteOrComptable(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de supprimer des paiements.");
             return "redirect:/paiements";
         }

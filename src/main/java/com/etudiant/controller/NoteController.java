@@ -30,6 +30,38 @@ public class NoteController {
     private final InscriptionService inscriptionService;
     private final MatiereService matiereService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isEnseignant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ENSEIGNANT;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES
+    // ==========================================
+
     /**
      * Liste des notes - Adaptée selon le rôle
      */
@@ -49,33 +81,34 @@ public class NoteController {
         List<com.etudiant.model.Inscription> inscriptions;
 
         // Si l'utilisateur est un étudiant, filtrer par ses inscriptions
-        if (role == Role.ETUDIANT) {
-            // Récupérer l'étudiant lié à l'utilisateur
+        if (isEtudiant(session)) {
             if (utilisateur.getEtudiant() != null) {
                 Long etudiantId = utilisateur.getEtudiant().getId();
-                // Récupérer les inscriptions de l'étudiant
                 inscriptions = inscriptionService.findByEtudiantId(etudiantId);
 
                 if (inscriptionId != null) {
-                    // Vérifier que l'étudiant a accès à cette inscription
                     boolean hasAccess = inscriptions.stream().anyMatch(i -> i.getId().equals(inscriptionId));
                     if (hasAccess) {
                         notes = noteService.findByInscriptionId(inscriptionId);
                         model.addAttribute("inscription", inscriptionService.findById(inscriptionId).orElse(null));
                         BigDecimal moyenne = noteService.calculerMoyenneGenerale(inscriptionId);
                         model.addAttribute("moyenneGenerale", moyenne);
-                    } else {
-                        notes = noteService.findByInscriptionId(inscriptions.get(0).getId());
+                    } else if (!inscriptions.isEmpty()) {
+                        Long firstId = inscriptions.get(0).getId();
+                        notes = noteService.findByInscriptionId(firstId);
                         model.addAttribute("inscription", inscriptions.get(0));
-                        BigDecimal moyenne = noteService.calculerMoyenneGenerale(inscriptions.get(0).getId());
+                        BigDecimal moyenne = noteService.calculerMoyenneGenerale(firstId);
                         model.addAttribute("moyenneGenerale", moyenne);
+                    } else {
+                        notes = List.of();
+                        model.addAttribute("inscription", null);
+                        model.addAttribute("moyenneGenerale", BigDecimal.ZERO);
                     }
                 } else if (!inscriptions.isEmpty()) {
-                    // Si aucune inscription sélectionnée, prendre la première
-                    Long firstInscriptionId = inscriptions.get(0).getId();
-                    notes = noteService.findByInscriptionId(firstInscriptionId);
+                    Long firstId = inscriptions.get(0).getId();
+                    notes = noteService.findByInscriptionId(firstId);
                     model.addAttribute("inscription", inscriptions.get(0));
-                    BigDecimal moyenne = noteService.calculerMoyenneGenerale(firstInscriptionId);
+                    BigDecimal moyenne = noteService.calculerMoyenneGenerale(firstId);
                     model.addAttribute("moyenneGenerale", moyenne);
                 } else {
                     notes = List.of();
@@ -83,7 +116,6 @@ public class NoteController {
                     model.addAttribute("moyenneGenerale", BigDecimal.ZERO);
                 }
 
-                // Pour les étudiants, on ne montre que leurs inscriptions
                 model.addAttribute("inscriptions", inscriptions);
                 model.addAttribute("isEtudiant", true);
             } else {
@@ -91,13 +123,13 @@ public class NoteController {
                 inscriptions = List.of();
                 model.addAttribute("inscriptions", inscriptions);
                 model.addAttribute("isEtudiant", true);
+                model.addAttribute("moyenneGenerale", BigDecimal.ZERO);
             }
 
-            // Les étudiants ne voient pas les matières pour filtrer
             model.addAttribute("matieres", List.of());
 
         } else {
-            // Administrateur ou autre rôle - accès complet
+            // ADMIN, SCOLARITE, ENSEIGNANT - accès complet
             if (inscriptionId != null) {
                 notes = noteService.findByInscriptionId(inscriptionId);
                 model.addAttribute("inscription", inscriptionService.findById(inscriptionId).orElse(null));
@@ -118,14 +150,14 @@ public class NoteController {
         model.addAttribute("notes", notes);
         model.addAttribute("sessions", Session.values());
         model.addAttribute("pageActive", "notes");
-        model.addAttribute("pageTitle", role == Role.ETUDIANT ? "Mes Notes" : "Liste des Notes");
-        model.addAttribute("role", role);
+        model.addAttribute("pageTitle", isEtudiant(session) ? "Mes Notes" : "Liste des Notes");
+        model.addAttribute("role", getRole(session));
 
         return "notes/liste";
     }
 
     /**
-     * Formulaire de saisie - Uniquement pour les administrateurs et enseignants
+     * Formulaire de saisie - ADMIN, SCOLARITE et ENSEIGNANT
      */
     @GetMapping("/saisie")
     public String saisieForm(
@@ -135,11 +167,7 @@ public class NoteController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les administrateurs, scolarité et enseignants peuvent saisir des notes
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de saisir des notes.");
             return "redirect:/notes";
         }
@@ -161,13 +189,13 @@ public class NoteController {
         model.addAttribute("sessions", Session.values());
         model.addAttribute("pageActive", "notes");
         model.addAttribute("pageTitle", "Saisie d'une Note");
-        model.addAttribute("role", role);
+        model.addAttribute("role", getRole(session));
 
         return "notes/saisie";
     }
 
     /**
-     * Traite la saisie d'une note - Uniquement pour les administrateurs et enseignants
+     * Traite la saisie d'une note - ADMIN, SCOLARITE et ENSEIGNANT
      */
     @PostMapping("/saisie")
     public String saisie(
@@ -177,10 +205,7 @@ public class NoteController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de saisir des notes.");
             return "redirect:/notes";
         }
@@ -210,7 +235,6 @@ public class NoteController {
             log.info("Note saisie avec succès");
 
             redirectAttributes.addFlashAttribute("success", "Note saisie avec succès !");
-
             return "redirect:/notes?inscriptionId=" + note.getInscription().getId();
 
         } catch (Exception e) {
@@ -222,7 +246,7 @@ public class NoteController {
     }
 
     /**
-     * Modifier une note - Uniquement pour les administrateurs et enseignants
+     * Modifier une note - ADMIN, SCOLARITE et ENSEIGNANT
      */
     @GetMapping("/modifier/{id}")
     public String modifierForm(
@@ -231,10 +255,7 @@ public class NoteController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de modifier des notes.");
             return "redirect:/notes";
         }
@@ -249,6 +270,7 @@ public class NoteController {
                     model.addAttribute("sessions", Session.values());
                     model.addAttribute("pageActive", "notes");
                     model.addAttribute("pageTitle", "Modifier une Note");
+                    model.addAttribute("role", getRole(session));
                     return "notes/modifier";
                 })
                 .orElseGet(() -> {
@@ -258,7 +280,7 @@ public class NoteController {
     }
 
     /**
-     * Traite la modification d'une note - Uniquement pour les administrateurs et enseignants
+     * Traite la modification d'une note - ADMIN, SCOLARITE et ENSEIGNANT
      */
     @PostMapping("/modifier")
     public String modifier(
@@ -268,10 +290,7 @@ public class NoteController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        if (role == Role.ETUDIANT) {
+        if (isEtudiant(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de modifier des notes.");
             return "redirect:/notes";
         }
@@ -292,7 +311,6 @@ public class NoteController {
             log.info("Note modifiée avec succès");
 
             redirectAttributes.addFlashAttribute("success", "Note modifiée avec succès !");
-
             return "redirect:/notes?inscriptionId=" + note.getInscription().getId();
 
         } catch (Exception e) {
@@ -304,7 +322,7 @@ public class NoteController {
     }
 
     /**
-     * Supprimer une note - Uniquement pour les administrateurs
+     * Supprimer une note - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/supprimer/{id}")
     public String supprimer(
@@ -312,11 +330,7 @@ public class NoteController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
-        Role role = utilisateur != null ? utilisateur.getRole() : null;
-
-        // Seuls les administrateurs et scolarité peuvent supprimer
-        if (role == Role.ETUDIANT || role == Role.ENSEIGNANT) {
+        if (!isAdminOrScolarite(session)) {
             redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit de supprimer des notes.");
             return "redirect:/notes";
         }

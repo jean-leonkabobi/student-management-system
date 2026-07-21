@@ -22,6 +22,38 @@ public class CoursController {
 
     private final MatiereService matiereService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isEnseignant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ENSEIGNANT;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES
+    // ==========================================
+
     @GetMapping
     public String mesCours(HttpSession session, Model model) {
 
@@ -40,15 +72,32 @@ public class CoursController {
         model.addAttribute("pageTitle", "Mes Cours");
         model.addAttribute("utilisateur", utilisateur);
 
-        // Si c'est un enseignant, récupérer ses cours
-        if (role == Role.ENSEIGNANT && utilisateur.getEnseignant() != null) {
+        // ADMIN ou SCOLARITE : voient tous les cours
+        if (isAdminOrScolarite(session)) {
+            List<Matiere> tousLesCours = matiereService.findAll();
+            model.addAttribute("mesCours", tousLesCours);
+            model.addAttribute("hasCours", !tousLesCours.isEmpty());
+            model.addAttribute("isAdminView", true);
+        }
+        // Enseignant : voit ses cours assignés
+        else if (isEnseignant(session) && utilisateur.getEnseignant() != null) {
             Long enseignantId = utilisateur.getEnseignant().getId();
             List<Matiere> mesCours = matiereService.findByEnseignantId(enseignantId);
             model.addAttribute("mesCours", mesCours);
             model.addAttribute("hasCours", !mesCours.isEmpty());
-        } else {
+            model.addAttribute("isAdminView", false);
+        }
+        // Étudiant : n'a pas accès aux cours
+        else if (isEtudiant(session)) {
             model.addAttribute("mesCours", List.of());
             model.addAttribute("hasCours", false);
+            model.addAttribute("isAdminView", false);
+        }
+        // Autres rôles
+        else {
+            model.addAttribute("mesCours", List.of());
+            model.addAttribute("hasCours", false);
+            model.addAttribute("isAdminView", false);
         }
 
         return "cours/index";

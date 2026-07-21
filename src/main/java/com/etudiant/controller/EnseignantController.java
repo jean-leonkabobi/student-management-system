@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -52,13 +53,39 @@ public class EnseignantController {
     private final UtilisateurService utilisateurService;
 
     // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
     // MÉTHODES
     // ==========================================
 
+    /**
+     * Affiche la liste des enseignants - ADMIN et SCOLARITE uniquement
+     */
     @GetMapping
     public String liste(
             @RequestParam(required = false) String search,
-            Model model) {
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Affichage de la liste des enseignants");
 
@@ -73,24 +100,47 @@ public class EnseignantController {
         model.addAttribute(ATTR_SEARCH, search);
         model.addAttribute(ATTR_PAGE_ACTIVE, PAGE_ACTIVE_VALUE);
         model.addAttribute(ATTR_PAGE_TITLE, TITLE_LISTE);
+        model.addAttribute("role", getRole(session));
 
         return VIEW_LISTE;
     }
 
+    /**
+     * Affiche le formulaire d'ajout - ADMIN et SCOLARITE uniquement
+     */
     @GetMapping("/ajouter")
-    public String ajouterForm(Model model) {
+    public String ajouterForm(
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
+
         model.addAttribute(ATTR_ENSEIGNANT, new Enseignant());
         model.addAttribute(ATTR_PAGE_ACTIVE, PAGE_ACTIVE_VALUE);
         model.addAttribute(ATTR_PAGE_TITLE, TITLE_AJOUTER);
+
         return VIEW_FORM;
     }
 
+    /**
+     * Traite l'ajout d'un enseignant - ADMIN et SCOLARITE uniquement
+     */
     @PostMapping("/ajouter")
     public String ajouter(
             @Valid @ModelAttribute(ATTR_ENSEIGNANT) Enseignant enseignant,
             BindingResult result,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         if (enseignantService.existsByMatricule(enseignant.getMatricule())) {
             result.rejectValue("matricule", "error.enseignant", "Ce matricule existe déjà");
@@ -108,7 +158,7 @@ public class EnseignantController {
         // Générer un mot de passe aléatoire
         String motDePasse = generateRandomPassword();
 
-        // Générer le nom d'utilisateur à partir du nom, prénom et postnom
+        // Générer le nom d'utilisateur
         String username = generateUsername(enseignant);
 
         // Créer le compte utilisateur pour l'enseignant
@@ -123,7 +173,6 @@ public class EnseignantController {
 
             utilisateurService.save(utilisateur);
 
-            // Afficher les identifiants dans la console
             log.info("==================================================");
             log.info("👨‍🏫 ENSEIGNANT CRÉÉ AVEC SUCCÈS !");
             log.info("   Nom: {}", enseignant.getNomComplet());
@@ -136,7 +185,7 @@ public class EnseignantController {
             redirectAttributes.addFlashAttribute(MSG_SUCCESS,
                     "Enseignant ajouté avec succès ! Un compte utilisateur a été créé.");
             redirectAttributes.addFlashAttribute(MSG_INFO,
-                    "Nom d'utilisateur: " + username + " | Mot de passe: " + motDePasse + " (à communiquer à l'enseignant)");
+                    "Nom d'utilisateur: " + username + " | Mot de passe: " + motDePasse);
 
         } catch (Exception e) {
             log.error("Erreur lors de la création du compte utilisateur: {}", e.getMessage());
@@ -147,11 +196,20 @@ public class EnseignantController {
         return REDIRECT_LISTE;
     }
 
+    /**
+     * Affiche le formulaire de modification - ADMIN et SCOLARITE uniquement
+     */
     @GetMapping("/modifier/{id}")
     public String modifierForm(
             @PathVariable Long id,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         return enseignantService.findById(id)
                 .map(enseignant -> {
@@ -166,12 +224,21 @@ public class EnseignantController {
                 });
     }
 
+    /**
+     * Traite la modification d'un enseignant - ADMIN et SCOLARITE uniquement
+     */
     @PostMapping("/modifier")
     public String modifier(
             @Valid @ModelAttribute(ATTR_ENSEIGNANT) Enseignant enseignant,
             BindingResult result,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         if (result.hasErrors()) {
             model.addAttribute(ATTR_PAGE_ACTIVE, PAGE_ACTIVE_VALUE);
@@ -184,10 +251,19 @@ public class EnseignantController {
         return REDIRECT_LISTE;
     }
 
+    /**
+     * Supprime un enseignant - ADMIN et SCOLARITE uniquement
+     */
     @GetMapping("/supprimer/{id}")
     public String supprimer(
             @PathVariable Long id,
+            HttpSession session,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         enseignantService.deleteById(id);
         redirectAttributes.addFlashAttribute(MSG_SUCCESS, "Enseignant supprimé !");
@@ -200,29 +276,24 @@ public class EnseignantController {
 
     /**
      * Génère un nom d'utilisateur à partir du nom, prénom et postnom
-     * Exemple: Dupont Marie Jean → dupont.marie.jean
      */
     private String generateUsername(Enseignant enseignant) {
         StringBuilder sb = new StringBuilder();
 
-        // Ajouter le nom
         if (enseignant.getNom() != null && !enseignant.getNom().isEmpty()) {
             sb.append(enseignant.getNom().toLowerCase());
         }
 
-        // Ajouter le prénom
         if (enseignant.getPrenom() != null && !enseignant.getPrenom().isEmpty()) {
             if (sb.length() > 0) sb.append(".");
             sb.append(enseignant.getPrenom().toLowerCase());
         }
 
-        // Ajouter le postnom (s'il existe)
         if (enseignant.getPostnom() != null && !enseignant.getPostnom().isEmpty()) {
             if (sb.length() > 0) sb.append(".");
             sb.append(enseignant.getPostnom().toLowerCase());
         }
 
-        // Remplacer les espaces par des points
         return sb.toString().replace(" ", ".");
     }
 

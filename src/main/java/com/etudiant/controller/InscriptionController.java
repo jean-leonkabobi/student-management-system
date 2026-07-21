@@ -5,6 +5,8 @@ import com.etudiant.model.Etudiant;
 import com.etudiant.model.Filiere;
 import com.etudiant.model.Inscription;
 import com.etudiant.model.Niveau;
+import com.etudiant.model.Utilisateur;
+import com.etudiant.model.Utilisateur.Role;
 import com.etudiant.service.AnneeAcademiqueService;
 import com.etudiant.service.EtudiantService;
 import com.etudiant.service.FiliereService;
@@ -18,6 +20,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -33,14 +36,48 @@ public class InscriptionController {
     private final NiveauService niveauService;
     private final AnneeAcademiqueService anneeAcademiqueService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES
+    // ==========================================
+
     /**
-     * Liste des inscriptions
+     * Liste des inscriptions - ADMIN et SCOLARITE uniquement
      */
     @GetMapping
     public String liste(
             @RequestParam(required = false) Long etudiantId,
             @RequestParam(required = false) Long filiereId,
-            Model model) {
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // Seul un étudiant ne peut pas voir les inscriptions
+        if (isEtudiant(session)) {
+            redirectAttributes.addFlashAttribute("error", "Vous n'avez pas accès aux inscriptions.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Affichage de la liste des inscriptions");
 
@@ -60,17 +97,25 @@ public class InscriptionController {
         model.addAttribute("filieres", filiereService.findAll());
         model.addAttribute("pageActive", "inscriptions");
         model.addAttribute("pageTitle", "Liste des Inscriptions");
+        model.addAttribute("role", getRole(session));
 
         return "inscriptions/liste";
     }
 
     /**
-     * Formulaire d'ajout d'une inscription
+     * Formulaire d'ajout d'une inscription - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/ajouter")
     public String ajouterForm(
             @RequestParam(required = false) Long etudiantId,
-            Model model) {
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Affichage du formulaire d'ajout d'inscription");
 
@@ -87,19 +132,26 @@ public class InscriptionController {
         model.addAttribute("anneesAcademiques", anneeAcademiqueService.findActiveYears());
         model.addAttribute("pageActive", "inscriptions");
         model.addAttribute("pageTitle", "Nouvelle Inscription");
+        model.addAttribute("role", getRole(session));
 
         return "inscriptions/ajouter";
     }
 
     /**
-     * Traite l'ajout d'une inscription
+     * Traite l'ajout d'une inscription - ADMIN et SCOLARITE uniquement
      */
     @PostMapping("/ajouter")
     public String ajouter(
             @Valid @ModelAttribute("inscription") Inscription inscription,
             BindingResult result,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Traitement de l'ajout d'une inscription");
 
@@ -125,9 +177,7 @@ public class InscriptionController {
             Inscription saved = inscriptionService.save(inscription);
             log.info("Inscription ajoutée avec succès: {}", saved.getId());
 
-            redirectAttributes.addFlashAttribute("success",
-                    "Inscription ajoutée avec succès !");
-
+            redirectAttributes.addFlashAttribute("success", "Inscription ajoutée avec succès !");
             return "redirect:/inscriptions";
 
         } catch (Exception e) {
@@ -139,10 +189,20 @@ public class InscriptionController {
     }
 
     /**
-     * Détail d'une inscription
+     * Détail d'une inscription - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/detail/{id}")
-    public String detail(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String detail(
+            @PathVariable Long id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (isEtudiant(session)) {
+            redirectAttributes.addFlashAttribute("error", "Vous n'avez pas accès aux détails des inscriptions.");
+            return "redirect:/dashboard";
+        }
+
         log.debug("Affichage du détail de l'inscription ID: {}", id);
 
         return inscriptionService.findById(id)
@@ -150,6 +210,7 @@ public class InscriptionController {
                     model.addAttribute("inscription", inscription);
                     model.addAttribute("pageActive", "inscriptions");
                     model.addAttribute("pageTitle", "Détail de l'Inscription");
+                    model.addAttribute("role", getRole(session));
                     return "inscriptions/detail";
                 })
                 .orElseGet(() -> {
@@ -159,10 +220,19 @@ public class InscriptionController {
     }
 
     /**
-     * Supprime une inscription
+     * Supprime une inscription - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/supprimer/{id}")
-    public String supprimer(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String supprimer(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
+
         log.debug("Suppression de l'inscription ID: {}", id);
 
         try {

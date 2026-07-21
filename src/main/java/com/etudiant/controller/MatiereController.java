@@ -2,6 +2,8 @@ package com.etudiant.controller;
 
 import com.etudiant.model.Matiere;
 import com.etudiant.model.Matiere.Semestre;
+import com.etudiant.model.Utilisateur;
+import com.etudiant.model.Utilisateur.Role;
 import com.etudiant.service.FiliereService;
 import com.etudiant.service.MatiereService;
 import com.etudiant.service.NiveauService;
@@ -13,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 @Controller
@@ -25,14 +28,48 @@ public class MatiereController {
     private final FiliereService filiereService;
     private final NiveauService niveauService;
 
+    // ==========================================
+    // MÉTHODES DE VÉRIFICATION
+    // ==========================================
+
+    private boolean isAdminOrScolarite(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        Role role = utilisateur.getRole();
+        return role == Role.ADMIN || role == Role.SCOLARITE;
+    }
+
+    private boolean isEtudiant(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        if (utilisateur == null) return false;
+        return utilisateur.getRole() == Role.ETUDIANT;
+    }
+
+    private Role getRole(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null ? utilisateur.getRole() : null;
+    }
+
+    // ==========================================
+    // MÉTHODES
+    // ==========================================
+
     /**
-     * Liste des matières
+     * Liste des matières - ADMIN, SCOLARITE et ENSEIGNANT
      */
     @GetMapping
     public String liste(
             @RequestParam(required = false) Long filiereId,
             @RequestParam(required = false) Long niveauId,
-            Model model) {
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // Les étudiants ne peuvent pas voir la liste des matières
+        if (isEtudiant(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Affichage de la liste des matières");
 
@@ -52,15 +89,25 @@ public class MatiereController {
         model.addAttribute("semestres", Semestre.values());
         model.addAttribute("pageActive", "matieres");
         model.addAttribute("pageTitle", "Liste des Matières");
+        model.addAttribute("role", getRole(session));
 
         return "matieres/liste";
     }
 
     /**
-     * Formulaire d'ajout d'une matière
+     * Formulaire d'ajout d'une matière - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/ajouter")
-    public String ajouterForm(Model model) {
+    public String ajouterForm(
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
+
         log.debug("Affichage du formulaire d'ajout de matière");
 
         model.addAttribute("matiere", new Matiere());
@@ -69,19 +116,26 @@ public class MatiereController {
         model.addAttribute("semestres", Semestre.values());
         model.addAttribute("pageActive", "matieres");
         model.addAttribute("pageTitle", "Nouvelle Matière");
+        model.addAttribute("role", getRole(session));
 
         return "matieres/ajouter";
     }
 
     /**
-     * Traite l'ajout d'une matière
+     * Traite l'ajout d'une matière - ADMIN et SCOLARITE uniquement
      */
     @PostMapping("/ajouter")
     public String ajouter(
             @Valid @ModelAttribute("matiere") Matiere matiere,
             BindingResult result,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Traitement de l'ajout d'une matière");
 
@@ -102,9 +156,7 @@ public class MatiereController {
             Matiere saved = matiereService.save(matiere);
             log.info("Matière ajoutée avec succès: {}", saved.getCode());
 
-            redirectAttributes.addFlashAttribute("success",
-                    "Matière ajoutée avec succès !");
-
+            redirectAttributes.addFlashAttribute("success", "Matière ajoutée avec succès !");
             return "redirect:/matieres";
 
         } catch (Exception e) {
@@ -116,10 +168,20 @@ public class MatiereController {
     }
 
     /**
-     * Formulaire de modification d'une matière
+     * Formulaire de modification d'une matière - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/modifier/{id}")
-    public String modifierForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String modifierForm(
+            @PathVariable Long id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
+
         log.debug("Affichage du formulaire de modification de la matière ID: {}", id);
 
         return matiereService.findById(id)
@@ -130,6 +192,7 @@ public class MatiereController {
                     model.addAttribute("semestres", Semestre.values());
                     model.addAttribute("pageActive", "matieres");
                     model.addAttribute("pageTitle", "Modifier une Matière");
+                    model.addAttribute("role", getRole(session));
                     return "matieres/modifier";
                 })
                 .orElseGet(() -> {
@@ -139,14 +202,20 @@ public class MatiereController {
     }
 
     /**
-     * Traite la modification d'une matière
+     * Traite la modification d'une matière - ADMIN et SCOLARITE uniquement
      */
     @PostMapping("/modifier")
     public String modifier(
             @Valid @ModelAttribute("matiere") Matiere matiere,
             BindingResult result,
+            HttpSession session,
             Model model,
             RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
 
         log.debug("Traitement de la modification de la matière ID: {}", matiere.getId());
 
@@ -163,9 +232,7 @@ public class MatiereController {
             matiereService.update(matiere);
             log.info("Matière modifiée avec succès: {}", matiere.getCode());
 
-            redirectAttributes.addFlashAttribute("success",
-                    "Matière modifiée avec succès !");
-
+            redirectAttributes.addFlashAttribute("success", "Matière modifiée avec succès !");
             return "redirect:/matieres";
 
         } catch (Exception e) {
@@ -177,10 +244,19 @@ public class MatiereController {
     }
 
     /**
-     * Supprime une matière
+     * Supprime une matière - ADMIN et SCOLARITE uniquement
      */
     @GetMapping("/supprimer/{id}")
-    public String supprimer(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String supprimer(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isAdminOrScolarite(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administration.");
+            return "redirect:/dashboard";
+        }
+
         log.debug("Suppression de la matière ID: {}", id);
 
         try {
