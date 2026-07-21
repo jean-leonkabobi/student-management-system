@@ -1,9 +1,11 @@
 package com.etudiant.controller;
 
+import com.etudiant.model.Enseignant;
 import com.etudiant.model.Etudiant;
 import com.etudiant.model.Etudiant.StatutEtudiant;
 import com.etudiant.model.Utilisateur;
 import com.etudiant.model.Utilisateur.Role;
+import com.etudiant.service.EnseignantService;
 import com.etudiant.service.EtudiantService;
 import com.etudiant.service.UtilisateurService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class AuthController {
 
     private final UtilisateurService utilisateurService;
     private final EtudiantService etudiantService;
+    private final EnseignantService enseignantService;
 
     @GetMapping("/login")
     public String loginPage(HttpSession session, Model model) {
@@ -96,37 +99,85 @@ public class AuthController {
         }
 
         try {
-            // 1. Créer l'étudiant
-            Etudiant etudiant = new Etudiant();
-            etudiant.setMatricule(etudiantService.generateMatricule());
-            etudiant.setNom(username); // Par défaut le nom d'utilisateur
-            etudiant.setPrenom(username);
-            etudiant.setEmail(email);
-            etudiant.setStatut(StatutEtudiant.ACTIF);
-
-            // Sauvegarder l'étudiant
-            Etudiant savedEtudiant = etudiantService.save(etudiant);
-            log.info("Étudiant créé pour l'utilisateur {}: {}", username, savedEtudiant.getMatricule());
-
-            // 2. Créer l'utilisateur
-            Utilisateur utilisateur = new Utilisateur();
-            utilisateur.setUsername(username);
-            utilisateur.setEmail(email);
-            utilisateur.setPasswordHash(passwordHash);
-            utilisateur.setEstActif(true);
-            utilisateur.setEtudiant(savedEtudiant); // Lier l'étudiant
-
+            Role userRole;
             try {
-                utilisateur.setRole(Role.valueOf(role));
+                userRole = Role.valueOf(role);
             } catch (IllegalArgumentException e) {
-                utilisateur.setRole(Role.ETUDIANT);
+                userRole = Role.ETUDIANT;
             }
 
-            utilisateurService.save(utilisateur);
-            log.info("Utilisateur créé avec succès: {} lié à l'étudiant ID: {}", username, savedEtudiant.getId());
+            // 1. Créer le profil selon le rôle
+            if (userRole == Role.ETUDIANT) {
+                // Créer un étudiant
+                Etudiant etudiant = new Etudiant();
+                etudiant.setMatricule(etudiantService.generateMatricule());
+                etudiant.setNom(username);
+                etudiant.setPrenom(username);
+                etudiant.setEmail(email);
+                etudiant.setStatut(StatutEtudiant.ACTIF);
 
-            redirectAttributes.addFlashAttribute("success",
-                    "Inscription réussie ! Vous pouvez maintenant vous connecter. Matricule: " + savedEtudiant.getMatricule());
+                Etudiant savedEtudiant = etudiantService.save(etudiant);
+                log.info("Étudiant créé pour l'utilisateur {}: {}", username, savedEtudiant.getMatricule());
+
+                // 2. Créer l'utilisateur avec l'étudiant associé
+                Utilisateur utilisateur = new Utilisateur();
+                utilisateur.setUsername(username);
+                utilisateur.setEmail(email);
+                utilisateur.setPasswordHash(passwordHash);
+                utilisateur.setEstActif(true);
+                utilisateur.setRole(Role.ETUDIANT);
+                utilisateur.setEtudiant(savedEtudiant);
+
+                utilisateurService.save(utilisateur);
+                log.info("Utilisateur créé avec succès: {} lié à l'étudiant ID: {}", username, savedEtudiant.getId());
+
+                redirectAttributes.addFlashAttribute("success",
+                        "Inscription réussie ! Vous êtes inscrit en tant qu'étudiant. Matricule: " + savedEtudiant.getMatricule());
+
+            } else if (userRole == Role.ENSEIGNANT) {
+                // Créer un enseignant
+                Enseignant enseignant = new Enseignant();
+                enseignant.setMatricule(generateMatriculeEnseignant());
+                enseignant.setNom(username);
+                enseignant.setPrenom(username);
+                enseignant.setEmail(email);
+                enseignant.setGrade("À définir");
+                enseignant.setDepartement("À définir");
+                enseignant.setSpecialite("À définir");
+
+                Enseignant savedEnseignant = enseignantService.save(enseignant);
+                log.info("Enseignant créé pour l'utilisateur {}: {}", username, savedEnseignant.getMatricule());
+
+                // 2. Créer l'utilisateur avec l'enseignant associé
+                Utilisateur utilisateur = new Utilisateur();
+                utilisateur.setUsername(username);
+                utilisateur.setEmail(email);
+                utilisateur.setPasswordHash(passwordHash);
+                utilisateur.setEstActif(true);
+                utilisateur.setRole(Role.ENSEIGNANT);
+                utilisateur.setEnseignant(savedEnseignant);
+
+                utilisateurService.save(utilisateur);
+                log.info("Utilisateur créé avec succès: {} lié à l'enseignant ID: {}", username, savedEnseignant.getId());
+
+                redirectAttributes.addFlashAttribute("success",
+                        "Inscription réussie ! Vous êtes inscrit en tant qu'enseignant. Matricule: " + savedEnseignant.getMatricule());
+
+            } else {
+                // Autres rôles (ADMIN, SCOLARITE, etc.) : pas de profil spécifique
+                Utilisateur utilisateur = new Utilisateur();
+                utilisateur.setUsername(username);
+                utilisateur.setEmail(email);
+                utilisateur.setPasswordHash(passwordHash);
+                utilisateur.setEstActif(true);
+                utilisateur.setRole(userRole);
+
+                utilisateurService.save(utilisateur);
+                log.info("Utilisateur créé avec succès: {} avec rôle: {}", username, userRole);
+
+                redirectAttributes.addFlashAttribute("success",
+                        "Inscription réussie ! Vous êtes inscrit en tant que " + userRole);
+            }
 
         } catch (Exception e) {
             log.error("Erreur lors de l'inscription: {}", e.getMessage());
@@ -136,5 +187,13 @@ public class AuthController {
         }
 
         return "redirect:/login";
+    }
+
+    /**
+     * Génère un matricule pour un enseignant
+     */
+    private String generateMatriculeEnseignant() {
+        long count = enseignantService.count() + 1;
+        return "ENS-" + String.format("%04d", count);
     }
 }
