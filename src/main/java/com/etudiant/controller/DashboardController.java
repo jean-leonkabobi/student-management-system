@@ -31,19 +31,17 @@ public class DashboardController {
 
         log.debug("Affichage du tableau de bord pour le rôle: {}", role);
 
-        // Rediriger selon le rôle
         switch (role) {
             case ADMIN:
+                return dashboardAdmin(session, model);
             case SCOLARITE:
+                return dashboardScolarite(session, model);
             case COMPTABLE:
             case BIBLIOTHECAIRE:
-                // Dashboard complet pour l'administration
                 return dashboardAdmin(session, model);
             case ENSEIGNANT:
-                // Dashboard enseignant
                 return dashboardEnseignant(session, model);
             case ETUDIANT:
-                // Dashboard étudiant
                 return dashboardEtudiant(session, model);
             default:
                 return dashboardAdmin(session, model);
@@ -102,5 +100,29 @@ public class DashboardController {
         model.addAttribute("utilisateur", utilisateur);
 
         return "dashboard/etudiant";
+    }
+
+    /**
+     * Dashboard pour la Scolarité
+     */
+    private String dashboardScolarite(HttpSession session, Model model) {
+        model.addAttribute("totalEtudiants", dashboardService.getTotalEtudiants());
+        model.addAttribute("totalEnseignants", dashboardService.getTotalEnseignants());
+        model.addAttribute("totalFilieres", dashboardService.getTotalFilieres());
+        model.addAttribute("totalInscriptions", dashboardService.getTotalInscriptions());
+        model.addAttribute("totalMatieres", dashboardService.getTotalMatieres());
+        model.addAttribute("totalPaiements", dashboardService.getTotalPaiements());
+        model.addAttribute("totalPaiementsMontant", dashboardService.getTotalPaiementsMontant());
+        model.addAttribute("etudiantsParStatut", dashboardService.getEtudiantsParStatut());
+        model.addAttribute("paiementsParStatut", dashboardService.getPaiementsParStatut());
+        model.addAttribute("moyenneGenerale", dashboardService.getMoyenneNotesGenerale());
+
+        model.addAttribute("role", session.getAttribute("role"));
+        model.addAttribute("username", session.getAttribute("username"));
+        model.addAttribute("pageActive", "dashboard");
+        model.addAttribute("pageTitle", "Tableau de bord - Scolarité");
+        model.addAttribute("utilisateur", session.getAttribute("utilisateur"));
+
+        return "dashboard/scolarite";
     }
 }
