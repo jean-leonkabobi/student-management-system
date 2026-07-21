@@ -76,6 +76,19 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+        /* Message d'information sur l'inscription */
+        .info-message {
+            background: #EFF6FF;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            color: #2563EB;
+            font-size: 14px;
+            border-left: 4px solid #2563EB;
+        }
+        .info-message i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -100,6 +113,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
+
+    <!-- Message d'information -->
+    <div class="info-message">
+        <i class="fas fa-info-circle"></i>
+        Cette inscription est réservée aux <strong>étudiants</strong>.
+        <br>Les enseignants et autres personnels sont créés par l'administration.
+    </div>
 
     <form action="${pageContext.request.contextPath}/register" method="post">
         <div class="mb-3">
@@ -134,17 +154,8 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Rôle</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-users-cog"></i></span>
-                <select name="role" class="form-control">
-                    <option value="ETUDIANT">Étudiant</option>
-                    <option value="ENSEIGNANT">Enseignant</option>
-                    <option value="SCOLARITE">Scolarité</option>
-                </select>
-            </div>
-        </div>
+        <!-- Champ rôle caché - toujours ETUDIANT -->
+        <input type="hidden" name="role" value="ETUDIANT">
 
         <button type="submit" class="btn-register">
             <i class="fas fa-user-plus"></i> S'inscrire

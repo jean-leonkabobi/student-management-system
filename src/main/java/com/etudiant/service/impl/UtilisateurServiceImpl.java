@@ -91,6 +91,24 @@ public class UtilisateurServiceImpl implements UtilisateurService {
         });
     }
 
+    /*@Override
+    public boolean authenticate(String username, String password) {
+        return utilisateurRepository.findByUsername(username)
+                .map(u -> {
+                    String hashedPassword = hashPassword(password);
+                    log.debug("Mot de passe saisi: {}", password);
+                    log.debug("Hash calculé: {}", hashedPassword);
+                    log.debug("Hash stocké: {}", u.getPasswordHash());
+
+                    boolean isValid = u.getPasswordHash().equals(hashedPassword);
+                    if (isValid) {
+                        u.setDerniereConnexion(LocalDateTime.now());
+                        utilisateurRepository.save(u);
+                    }
+                    return isValid;
+                })
+                .orElse(false);
+    }*/
     @Override
     public boolean authenticate(String username, String password) {
         return utilisateurRepository.findByUsername(username)
