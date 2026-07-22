@@ -9,7 +9,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // Redirection de la racine vers le tableau de bord
-        registry.addViewController("/").setViewName("redirect:/dashboard");
+        // Page de login accessible directement
+        registry.addViewController("/login").setViewName("login");
+
+        // Redirection de l'accueil
+        registry.addViewController("/").setViewName("redirect:/accueil");
     }
 }
