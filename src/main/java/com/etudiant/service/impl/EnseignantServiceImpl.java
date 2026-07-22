@@ -1,27 +1,28 @@
-package com.etudiant.service.impl;
+package com.etudiant.service;
 
 import com.etudiant.model.Enseignant;
 import com.etudiant.repository.EnseignantRepository;
-import com.etudiant.service.EnseignantService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
-@RequiredArgsConstructor
-@Slf4j
 public class EnseignantServiceImpl implements EnseignantService {
 
     private final EnseignantRepository enseignantRepository;
 
+    public EnseignantServiceImpl(EnseignantRepository enseignantRepository) {
+        this.enseignantRepository = enseignantRepository;
+    }
+
     @Override
-    public List<Enseignant> findAll() {
-        return enseignantRepository.findAll();
+    public Enseignant save(Enseignant enseignant) {
+        if (enseignant.getMatricule() == null || enseignant.getMatricule().isEmpty()) {
+            enseignant.setMatricule(generateMatricule());
+        }
+        return enseignantRepository.save(enseignant);
     }
 
     @Override
@@ -35,47 +36,37 @@ public class EnseignantServiceImpl implements EnseignantService {
     }
 
     @Override
-    public Optional<Enseignant> findByEmail(String email) {
-        return enseignantRepository.findByEmail(email);
+    public List<Enseignant> findAll() {
+        return enseignantRepository.findAll();
     }
 
     @Override
     public List<Enseignant> search(String keyword) {
-        log.debug("Recherche d'enseignants avec le mot-clé: {}", keyword);
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return findAll();
-        }
-        return enseignantRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(
-                keyword.trim(), keyword.trim());
+        return enseignantRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(keyword, keyword);
     }
 
     @Override
-    public Enseignant save(Enseignant enseignant) {
-        log.info("Sauvegarde de l'enseignant: {}", enseignant.getNomComplet());
-
-        // Générer un matricule si vide
-        if (enseignant.getMatricule() == null || enseignant.getMatricule().isEmpty()) {
-            enseignant.setMatricule(generateMatricule());
-        }
-
-        return enseignantRepository.save(enseignant);
+    public List<Enseignant> findByDepartement(String departement) {
+        return enseignantRepository.findByDepartement(departement);
     }
 
     @Override
-    public Enseignant update(Enseignant enseignant) {
-        log.info("Mise à jour de l'enseignant ID: {}", enseignant.getId());
-        return enseignantRepository.save(enseignant);
+    public Enseignant update(Long id, Enseignant enseignant) {
+        Enseignant existing = enseignantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enseignant non trouvé avec l'id : " + id));
+        existing.setNom(enseignant.getNom());
+        existing.setPrenom(enseignant.getPrenom());
+        existing.setEmail(enseignant.getEmail());
+        existing.setTelephone(enseignant.getTelephone());
+        existing.setSpecialite(enseignant.getSpecialite());
+        existing.setDepartement(enseignant.getDepartement());
+        existing.setGrade(enseignant.getGrade());
+        return enseignantRepository.save(existing);
     }
 
     @Override
     public void deleteById(Long id) {
-        log.info("Suppression de l'enseignant ID: {}", id);
         enseignantRepository.deleteById(id);
-    }
-
-    @Override
-    public boolean existsByMatricule(String matricule) {
-        return enseignantRepository.existsByMatricule(matricule);
     }
 
     @Override
@@ -83,8 +74,10 @@ public class EnseignantServiceImpl implements EnseignantService {
         return enseignantRepository.count();
     }
 
-    private String generateMatricule() {
+    @Override
+    public String generateMatricule() {
+        String year = String.valueOf(Year.now().getValue());
         long count = enseignantRepository.count() + 1;
-        return "ENS-" + String.format("%04d", count);
+        return "ENS" + year + String.format("%04d", count);
     }
 }

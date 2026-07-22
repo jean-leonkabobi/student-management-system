@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FiliereService {
-    List<Filiere> findAll();
+    Filiere save(Filiere filiere);
     Optional<Filiere> findById(Long id);
     Optional<Filiere> findByCode(String code);
-    Filiere save(Filiere filiere);
+    List<Filiere> findAll();
+    Filiere update(Long id, Filiere filiere);
     void deleteById(Long id);
     boolean existsByCode(String code);
+    long count();
 }

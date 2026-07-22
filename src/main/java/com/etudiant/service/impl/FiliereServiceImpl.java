@@ -1,25 +1,24 @@
-package com.etudiant.service.impl;
+package com.etudiant.service;
 
 import com.etudiant.model.Filiere;
 import com.etudiant.repository.FiliereRepository;
-import com.etudiant.service.FiliereService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
-@RequiredArgsConstructor
 public class FiliereServiceImpl implements FiliereService {
 
     private final FiliereRepository filiereRepository;
 
+    public FiliereServiceImpl(FiliereRepository filiereRepository) {
+        this.filiereRepository = filiereRepository;
+    }
+
     @Override
-    public List<Filiere> findAll() {
-        return filiereRepository.findAll();
+    public Filiere save(Filiere filiere) {
+        return filiereRepository.save(filiere);
     }
 
     @Override
@@ -33,8 +32,18 @@ public class FiliereServiceImpl implements FiliereService {
     }
 
     @Override
-    public Filiere save(Filiere filiere) {
-        return filiereRepository.save(filiere);
+    public List<Filiere> findAll() {
+        return filiereRepository.findAll();
+    }
+
+    @Override
+    public Filiere update(Long id, Filiere filiere) {
+        Filiere existing = filiereRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Filière non trouvée avec l'id : " + id));
+        existing.setCode(filiere.getCode());
+        existing.setNom(filiere.getNom());
+        existing.setDescription(filiere.getDescription());
+        return filiereRepository.save(existing);
     }
 
     @Override
@@ -45,5 +54,10 @@ public class FiliereServiceImpl implements FiliereService {
     @Override
     public boolean existsByCode(String code) {
         return filiereRepository.existsByCode(code);
+    }
+
+    @Override
+    public long count() {
+        return filiereRepository.count();
     }
 }

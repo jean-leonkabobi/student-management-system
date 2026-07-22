@@ -1,145 +1,85 @@
-package com.etudiant.service.impl;
+package com.etudiant.service;
 
 import com.etudiant.model.Etudiant;
-import com.etudiant.model.Etudiant.StatutEtudiant;
 import com.etudiant.repository.EtudiantRepository;
-import com.etudiant.service.EtudiantService;
-import com.etudiant.utils.MatriculeGenerator;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
-@RequiredArgsConstructor
-@Slf4j
 public class EtudiantServiceImpl implements EtudiantService {
 
     private final EtudiantRepository etudiantRepository;
-    private final MatriculeGenerator matriculeGenerator;
+
+    public EtudiantServiceImpl(EtudiantRepository etudiantRepository) {
+        this.etudiantRepository = etudiantRepository;
+    }
 
     @Override
-    public List<Etudiant> findAll() {
-        log.debug("Récupération de tous les étudiants");
-        return etudiantRepository.findAll();
+    public Etudiant save(Etudiant etudiant) {
+        if (etudiant.getMatricule() == null || etudiant.getMatricule().isEmpty()) {
+            etudiant.setMatricule(generateMatricule());
+        }
+        return etudiantRepository.save(etudiant);
     }
 
     @Override
     public Optional<Etudiant> findById(Long id) {
-        log.debug("Recherche de l'étudiant avec l'ID: {}", id);
         return etudiantRepository.findById(id);
     }
 
     @Override
     public Optional<Etudiant> findByMatricule(String matricule) {
-        log.debug("Recherche de l'étudiant avec le matricule: {}", matricule);
         return etudiantRepository.findByMatricule(matricule);
     }
 
     @Override
-    public Optional<Etudiant> findByEmail(String email) {
-        log.debug("Recherche de l'étudiant avec l'email: {}", email);
-        return etudiantRepository.findByEmail(email);
-    }
-
-    @Override
-    public Etudiant save(Etudiant etudiant) {
-        log.info("Sauvegarde d'un nouvel étudiant: {}", etudiant.getNomComplet());
-
-        // Générer un matricule si ce n'est pas déjà fait
-        if (etudiant.getMatricule() == null || etudiant.getMatricule().isEmpty()) {
-            etudiant.setMatricule(matriculeGenerator.generate());
-        }
-
-        // Vérifier que le matricule est unique
-        if (etudiantRepository.existsByMatricule(etudiant.getMatricule())) {
-            throw new IllegalArgumentException("Le matricule " + etudiant.getMatricule() + " existe déjà");
-        }
-
-        return etudiantRepository.save(etudiant);
-    }
-
-    @Override
-    public Etudiant update(Etudiant etudiant) {
-        log.info("Mise à jour de l'étudiant: {}", etudiant.getNomComplet());
-
-        // Vérifier que l'étudiant existe
-        if (!etudiantRepository.existsById(etudiant.getId())) {
-            throw new IllegalArgumentException("L'étudiant avec l'ID " + etudiant.getId() + " n'existe pas");
-        }
-
-        return etudiantRepository.save(etudiant);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        log.info("Suppression de l'étudiant avec l'ID: {}", id);
-
-        // Vérifier que l'étudiant existe
-        if (!etudiantRepository.existsById(id)) {
-            throw new IllegalArgumentException("L'étudiant avec l'ID " + id + " n'existe pas");
-        }
-
-        etudiantRepository.deleteById(id);
-    }
-
-    @Override
-    public void delete(Etudiant etudiant) {
-        log.info("Suppression de l'étudiant: {}", etudiant.getNomComplet());
-        etudiantRepository.delete(etudiant);
+    public List<Etudiant> findAll() {
+        return etudiantRepository.findAll();
     }
 
     @Override
     public List<Etudiant> search(String keyword) {
-        log.debug("Recherche d'étudiants avec le mot-clé: {}", keyword);
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return findAll();
+        return etudiantRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(keyword, keyword);
+    }
+
+    @Override
+    public Etudiant update(Long id, Etudiant etudiant) {
+        Etudiant existing = etudiantRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Étudiant non trouvé avec l'id : " + id));
+        existing.setNom(etudiant.getNom());
+        existing.setPrenom(etudiant.getPrenom());
+        existing.setDateNaissance(etudiant.getDateNaissance());
+        existing.setEmail(etudiant.getEmail());
+        existing.setTelephone(etudiant.getTelephone());
+        existing.setAdresse(etudiant.getAdresse());
+        if (etudiant.getPhoto() != null) {
+            existing.setPhoto(etudiant.getPhoto());
         }
-        return etudiantRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(
-                keyword.trim(), keyword.trim());
+        return etudiantRepository.save(existing);
     }
 
     @Override
-    public List<Etudiant> findByStatut(StatutEtudiant statut) {
-        log.debug("Recherche des étudiants avec le statut: {}", statut);
-        return etudiantRepository.findByStatut(statut);
+    public void deleteById(Long id) {
+        etudiantRepository.deleteById(id);
     }
 
     @Override
-    public List<Etudiant> findEtudiantsByFiliere(Long filiereId) {
-        log.debug("Recherche des étudiants de la filière ID: {}", filiereId);
-        return etudiantRepository.findEtudiantsByFiliereId(filiereId);
+    public boolean existsByMatricule(String matricule) {
+        return etudiantRepository.existsByMatricule(matricule);
     }
 
     @Override
-    public List<Etudiant> rechercheMultiCritere(String matricule, String nom, String prenom,
-                                                String email, StatutEtudiant statut) {
-        log.debug("Recherche multi-critère");
-        return etudiantRepository.rechercheMultiCritere(matricule, nom, prenom, email, statut);
-    }
-
-    @Override
-    public long countByStatut(StatutEtudiant statut) {
-        return etudiantRepository.countByStatut(statut);
-    }
-
-    @Override
-    public long countTotal() {
+    public long count() {
         return etudiantRepository.count();
     }
 
     @Override
     public String generateMatricule() {
-        return matriculeGenerator.generate();
-    }
-
-    @Override
-    public boolean matriculeExists(String matricule) {
-        return etudiantRepository.existsByMatricule(matricule);
+        String year = String.valueOf(Year.now().getValue());
+        long count = etudiantRepository.count() + 1;
+        return "ETU" + year + String.format("%04d", count);
     }
 }

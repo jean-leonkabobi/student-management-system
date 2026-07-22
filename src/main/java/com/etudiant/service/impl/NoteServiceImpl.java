@@ -1,30 +1,24 @@
-package com.etudiant.service.impl;
+package com.etudiant.service;
 
 import com.etudiant.model.Note;
-import com.etudiant.model.Note.Session;
 import com.etudiant.repository.NoteRepository;
-import com.etudiant.service.NoteService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
-@RequiredArgsConstructor
-@Slf4j
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
 
+    public NoteServiceImpl(NoteRepository noteRepository) {
+        this.noteRepository = noteRepository;
+    }
+
     @Override
-    public List<Note> findAll() {
-        return noteRepository.findAll();
+    public Note save(Note note) {
+        return noteRepository.save(note);
     }
 
     @Override
@@ -33,8 +27,13 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public List<Note> findByInscriptionId(Long inscriptionId) {
-        return noteRepository.findByInscriptionId(inscriptionId);
+    public List<Note> findAll() {
+        return noteRepository.findAll();
+    }
+
+    @Override
+    public List<Note> findByEtudiantId(Long etudiantId) {
+        return noteRepository.findByEtudiantId(etudiantId);
     }
 
     @Override
@@ -43,58 +42,51 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    public List<Note> findByInscriptionAndSession(Long inscriptionId, Session session) {
-        return noteRepository.findByInscriptionIdAndSession(inscriptionId, session);
+    public List<Note> findByEtudiantIdAndSemestre(Long etudiantId, String semestre) {
+        return noteRepository.findByEtudiantIdAndSemestre(etudiantId, semestre);
     }
 
     @Override
-    public Optional<Note> findByInscriptionAndMatiereAndSession(Long inscriptionId, Long matiereId, Session session) {
-        return noteRepository.findByInscriptionIdAndMatiereIdAndSession(inscriptionId, matiereId, session);
+    public List<Note> findByEtudiantIdAndAnneeUniversitaire(Long etudiantId, String anneeUniversitaire) {
+        return noteRepository.findByEtudiantIdAndAnneeUniversitaire(etudiantId, anneeUniversitaire);
     }
 
     @Override
-    public BigDecimal calculerMoyenneGenerale(Long inscriptionId) {
-        List<Note> notes = noteRepository.findByInscriptionId(inscriptionId);
-
-        if (notes.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-
-        // Calcul de la moyenne pondérée par les crédits
-        BigDecimal totalPoints = BigDecimal.ZERO;
-        int totalCredits = 0;
-
-        for (Note note : notes) {
-            if (note.getMoyenne() != null) {
-                totalPoints = totalPoints.add(note.getMoyenne().multiply(BigDecimal.valueOf(note.getMatiere().getCredit())));
-                totalCredits += note.getMatiere().getCredit();
-            }
-        }
-
-        if (totalCredits == 0) {
-            return BigDecimal.ZERO;
-        }
-
-        return totalPoints.divide(BigDecimal.valueOf(totalCredits), 2, RoundingMode.HALF_UP);
-    }
-
-    @Override
-    public Note save(Note note) {
-        log.info("Sauvegarde d'une note");
-        note.calculerMoyenne();
-        return noteRepository.save(note);
-    }
-
-    @Override
-    public Note update(Note note) {
-        log.info("Mise à jour de la note ID: {}", note.getId());
-        note.calculerMoyenne();
-        return noteRepository.save(note);
+    public Note update(Long id, Note note) {
+        Note existing = noteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Note non trouvée avec l'id : " + id));
+        existing.setValeur(note.getValeur());
+        existing.setTypeExamen(note.getTypeExamen());
+        existing.setSemestre(note.getSemestre());
+        existing.setAnneeUniversitaire(note.getAnneeUniversitaire());
+        existing.setEtudiant(note.getEtudiant());
+        existing.setMatiere(note.getMatiere());
+        return noteRepository.save(existing);
     }
 
     @Override
     public void deleteById(Long id) {
-        log.info("Suppression de la note ID: {}", id);
         noteRepository.deleteById(id);
+    }
+
+    @Override
+    public Double calculerMoyenne(Long etudiantId, Long matiereId) {
+        List<Note> notes = noteRepository.findByMatiereId(matiereId);
+        if (notes == null || notes.isEmpty()) {
+            return 0.0;
+        }
+        double somme = notes.stream()
+                .filter(n -> n.getEtudiant().getId().equals(etudiantId))
+                .mapToDouble(Note::getValeur)
+                .sum();
+        long count = notes.stream()
+                .filter(n -> n.getEtudiant().getId().equals(etudiantId))
+                .count();
+        return count > 0 ? somme / count : 0.0;
+    }
+
+    @Override
+    public long count() {
+        return noteRepository.count();
     }
 }
