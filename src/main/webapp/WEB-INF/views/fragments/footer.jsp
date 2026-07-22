@@ -1,43 +1,12 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-
-</div> <!-- Fin page-content -->
-
-<!-- Footer -->
-<footer style="text-align: center; color: #94A3B8; font-size: 13px; padding: 20px 32px; border-top: 1px solid #E2E8F0; margin-top: 20px;">
-    <p style="margin-bottom: 4px;">
-        <i class="fas fa-graduation-cap" style="color: #2563EB;"></i>
-        Gestion des Étudiants - Spring MVC avec JSP &amp; JSTL
-    </p>
-    <p style="margin-bottom: 0; font-size: 12px;">
-        &copy; 2026 - Projet scolaire - Tous droits réservés
-    </p>
-</footer>
-
-</main>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 </div>
-
-<!-- ========================================== -->
-<!-- JAVASCRIPT -->
-<!-- ========================================== -->
-<script>
-    // Toggle du menu sur mobile
-    document.getElementById('menuToggle').addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('active');
-    });
-
-    // Fermer le menu en cliquant sur l'overlay
-    document.getElementById('sidebarOverlay').addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-    });
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js">
-</script>
+</div>
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container text-center">
+        <span class="text-muted">© 2026 - Application de Gestion Universitaire - Tous droits réservés</span>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="${pageContext.request.contextPath}/js/script.js"></script>
 </body>
 </html>

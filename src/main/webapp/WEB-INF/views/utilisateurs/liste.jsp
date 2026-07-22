@@ -1,102 +1,54 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ include file="../fragments/header.jsp" %>
+<%@ include file="../fragments/sidebar.jsp" %>
 
-<jsp:include page="../fragments/header.jsp"/>
-
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="fas fa-users-cog text-primary"></i> Liste des Utilisateurs</h2>
-    <a href="${pageContext.request.contextPath}/utilisateurs/ajouter" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Nouvel utilisateur
-    </a>
-</div>
-
-<!-- Messages -->
-<c:if test="${not empty success}">
-    <div class="alert alert-success alert-dismissible fade show">
-        <i class="fas fa-check-circle"></i> ${success}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Gestion des Utilisateurs</h1>
+        <a href="${pageContext.request.contextPath}/utilisateurs/ajouter" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvel utilisateur
+        </a>
     </div>
-</c:if>
 
-<c:if test="${not empty error}">
-    <div class="alert alert-danger alert-dismissible fade show">
-        <i class="fas fa-exclamation-circle"></i> ${error}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-</c:if>
+    <c:if test="${not empty success}"><div class="alert alert-success">${success}</div></c:if>
+    <c:if test="${not empty error}"><div class="alert alert-danger">${error}</div></c:if>
 
-<!-- Tableau -->
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:forEach items="${utilisateurs}" var="u">
                 <tr>
-                    <th>#</th>
-                    <th>Nom d'utilisateur</th>
-                    <th>Email</th>
-                    <th>Rôle</th>
-                    <th>Statut</th>
-                    <th>Dernière connexion</th>
-                    <th class="text-center">Actions</th>
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.nom}</td>
+                    <td>${u.prenom}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge bg-${u.role == 'ADMIN' ? 'danger' : 'primary'}">${u.role}</span></td>
+                    <td><span class="badge bg-${u.actif ? 'success' : 'secondary'}">${u.actif ? 'Actif' : 'Inactif'}</span></td>
+                    <td>
+                        <a href="${pageContext.request.contextPath}/utilisateurs/details/${u.id}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                        <a href="${pageContext.request.contextPath}/utilisateurs/modifier/${u.id}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                        <a href="${pageContext.request.contextPath}/utilisateurs/supprimer/${u.id}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cet utilisateur ?')"><i class="bi bi-trash"></i></a>
+                    </td>
                 </tr>
-                </thead>
-                <tbody>
-                <c:choose>
-                    <c:when test="${empty utilisateurs}">
-                        <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
-                                <i class="fas fa-inbox fa-2x d-block mb-2"></i>
-                                Aucun utilisateur trouvé
-                            </td>
-                        </tr>
-                    </c:when>
-                    <c:otherwise>
-                        <c:forEach items="${utilisateurs}" var="u" varStatus="status">
-                            <tr>
-                                <td>${status.index + 1}</td>
-                                <td><strong>${u.username}</strong></td>
-                                <td>${u.email}</td>
-                                <td>
-                                        <span class="badge
-                                            ${u.role == 'ADMIN' ? 'bg-danger' :
-                                              u.role == 'SCOLARITE' ? 'bg-primary' :
-                                              u.role == 'ENSEIGNANT' ? 'bg-success' :
-                                              u.role == 'ETUDIANT' ? 'bg-info' :
-                                              u.role == 'COMPTABLE' ? 'bg-warning' : 'bg-secondary'}">
-                                                ${u.role}
-                                        </span>
-                                </td>
-                                <td>
-                                        <span class="badge ${u.estActif ? 'bg-success' : 'bg-danger'}">
-                                                ${u.estActif ? 'Actif' : 'Inactif'}
-                                        </span>
-                                </td>
-                                <td>
-                                        ${u.derniereConnexion != null ? u.derniereConnexion : 'Jamais'}
-                                </td>
-                                <td class="text-center">
-                                    <a href="${pageContext.request.contextPath}/utilisateurs/toggle/${u.id}"
-                                       class="btn btn-sm ${u.estActif ? 'btn-warning' : 'btn-success'}">
-                                        <i class="fas ${u.estActif ? 'fa-pause' : 'fa-play'}"></i>
-                                    </a>
-                                    <a href="${pageContext.request.contextPath}/utilisateurs/supprimer/${u.id}"
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Supprimer cet utilisateur ?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        </c:forEach>
-                    </c:otherwise>
-                </c:choose>
-                </tbody>
-            </table>
-        </div>
+            </c:forEach>
+            <c:if test="${empty utilisateurs}">
+                <tr><td colspan="8" class="text-center">Aucun utilisateur trouvé</td></tr>
+            </c:if>
+            </tbody>
+        </table>
     </div>
-    <div class="card-footer text-muted">
-        Total : ${utilisateurs.size()} utilisateur(s)
-    </div>
-</div>
-
-<jsp:include page="../fragments/footer.jsp"/>
+</main>
+<%@ include file="../fragments/footer.jsp" %>
