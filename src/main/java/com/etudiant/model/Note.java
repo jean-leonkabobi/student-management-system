@@ -5,12 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "note",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"inscription_id", "matiere_id", "session"}))
+@Table(name = "notes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,58 +18,31 @@ public class Note {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private Double valeur;
+
+    @Column(name = "type_examen", nullable = false, length = 30)
+    private String typeExamen; // DS, EXAMEN, TP, RATTRAPAGE
+
+    @Column(length = 10)
+    private String semestre; // S1, S2, S3...
+
+    @Column(name = "annee_universitaire", length = 9)
+    private String anneeUniversitaire; // 2025-2026
+
+    @Column(name = "date_saisie")
+    private LocalDateTime dateSaisie;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inscription_id", nullable = false)
-    private Inscription inscription;
+    @JoinColumn(name = "etudiant_id", nullable = false)
+    private Etudiant etudiant;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matiere_id", nullable = false)
     private Matiere matiere;
 
-    @Column(name = "controle_continu", precision = 4, scale = 2)
-    private BigDecimal controleContinu;
-
-    @Column(precision = 4, scale = 2)
-    private BigDecimal tp;
-
-    @Column(precision = 4, scale = 2)
-    private BigDecimal examen;
-
-    @Column(precision = 4, scale = 2)
-    private BigDecimal moyenne;
-
-    @Column(name = "credit_obtenu")
-    private Integer creditObtenu = 0;
-
-    @Column(length = 20)
-    private String mention;
-
-    @Enumerated(EnumType.STRING)
-    private Session session = Session.NORMALE;
-
-    @Column(name = "date_saisie")
-    private LocalDate dateSaisie;
-
-    public enum Session {
-        NORMALE, RATTRAPAGE
-    }
-
     @PrePersist
-    @PreUpdate
-    public void calculerMoyenne() {
-        if (controleContinu != null && tp != null && examen != null) {
-            this.moyenne = controleContinu.add(tp).add(examen)
-                    .divide(BigDecimal.valueOf(3), 2, BigDecimal.ROUND_HALF_UP);
-
-            // Déterminer la mention
-            if (this.moyenne != null) {
-                double moy = this.moyenne.doubleValue();
-                if (moy >= 16) this.mention = "Très Bien";
-                else if (moy >= 14) this.mention = "Bien";
-                else if (moy >= 12) this.mention = "Assez Bien";
-                else if (moy >= 10) this.mention = "Passable";
-                else this.mention = "Insuffisant";
-            }
-        }
+    protected void onCreate() {
+        this.dateSaisie = LocalDateTime.now();
     }
 }

@@ -30,10 +30,16 @@ public class UtilisateurController {
     private final EtudiantService etudiantService;
     private final EnseignantService enseignantService;
 
+    private boolean isAdmin(HttpSession session) {
+        Utilisateur utilisateur = (Utilisateur) session.getAttribute("utilisateur");
+        return utilisateur != null && utilisateur.getRole() == Role.ADMIN;
+    }
+
     @GetMapping
-    public String liste(HttpSession session, Model model) {
-        if (session.getAttribute("utilisateur") == null) {
-            return "redirect:/login";
+    public String liste(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administrateur.");
+            return "redirect:/dashboard";
         }
 
         List<Utilisateur> utilisateurs = utilisateurService.findAll();
@@ -46,9 +52,10 @@ public class UtilisateurController {
     }
 
     @GetMapping("/ajouter")
-    public String ajouterForm(HttpSession session, Model model) {
-        if (session.getAttribute("utilisateur") == null) {
-            return "redirect:/login";
+    public String ajouterForm(HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administrateur.");
+            return "redirect:/dashboard";
         }
 
         model.addAttribute("utilisateur", new Utilisateur());
@@ -67,16 +74,15 @@ public class UtilisateurController {
                           Model model,
                           RedirectAttributes redirectAttributes) {
 
-        if (session.getAttribute("utilisateur") == null) {
-            return "redirect:/login";
+        if (!isAdmin(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administrateur.");
+            return "redirect:/dashboard";
         }
 
-        // Vérifier que les mots de passe correspondent
         if (!utilisateur.getPasswordHash().equals(confirmPassword)) {
             result.rejectValue("passwordHash", "error.utilisateur", "Les mots de passe ne correspondent pas");
         }
 
-        // Vérifier que le nom d'utilisateur n'existe pas déjà
         if (utilisateurService.findByUsername(utilisateur.getUsername()).isPresent()) {
             result.rejectValue("username", "error.utilisateur", "Ce nom d'utilisateur existe déjà");
         }
@@ -89,7 +95,6 @@ public class UtilisateurController {
         }
 
         try {
-            // Créer le profil selon le rôle
             if (utilisateur.getRole() == Role.ETUDIANT) {
                 // Créer un étudiant
                 Etudiant etudiant = new Etudiant();
@@ -102,6 +107,21 @@ public class UtilisateurController {
                 Etudiant savedEtudiant = etudiantService.save(etudiant);
                 utilisateur.setEtudiant(savedEtudiant);
                 log.info("Étudiant créé pour l'utilisateur {}: {}", utilisateur.getUsername(), savedEtudiant.getMatricule());
+
+                // Générer un mot de passe aléatoire pour l'étudiant
+                String motDePasse = generateRandomPassword();
+                utilisateur.setPasswordHash(motDePasse);
+
+                log.info("==================================================");
+                log.info("🎓 ÉTUDIANT CRÉÉ AVEC SUCCÈS !");
+                log.info("   Nom: {}", utilisateur.getUsername());
+                log.info("   Email: {}", utilisateur.getEmail());
+                log.info("   Matricule: {}", savedEtudiant.getMatricule());
+                log.info("   🔑 Mot de passe: {}", motDePasse);
+                log.info("==================================================");
+
+                redirectAttributes.addFlashAttribute("info",
+                        "Mot de passe généré: " + motDePasse + " (à communiquer à l'étudiant)");
 
             } else if (utilisateur.getRole() == Role.ENSEIGNANT) {
                 // Créer un enseignant
@@ -119,12 +139,9 @@ public class UtilisateurController {
                 log.info("Enseignant créé pour l'utilisateur {}: {}", utilisateur.getUsername(), savedEnseignant.getMatricule());
 
             } else {
-                // Autres rôles : ADMIN, SCOLARITE, COMPTABLE, BIBLIOTHECAIRE
-                // Pas de profil spécifique, juste l'utilisateur
                 log.info("Utilisateur {} créé avec le rôle {}", utilisateur.getUsername(), utilisateur.getRole());
             }
 
-            // Sauvegarder l'utilisateur
             utilisateurService.save(utilisateur);
             redirectAttributes.addFlashAttribute("success", "Utilisateur ajouté avec succès !");
 
@@ -137,11 +154,17 @@ public class UtilisateurController {
             return "utilisateurs/ajouter";
         }
 
-        return "redirect:/utilisateurs";
+        // ⬇️ REDIRIGER VERS LE DASHBOARD ⬇️
+        return "redirect:/dashboard";
     }
 
     @GetMapping("/toggle/{id}")
-    public String toggle(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String toggle(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administrateur.");
+            return "redirect:/dashboard";
+        }
+
         utilisateurService.findById(id).ifPresent(u -> {
             if (u.getEstActif()) {
                 utilisateurService.desactiverUtilisateur(id);
@@ -156,17 +179,32 @@ public class UtilisateurController {
     }
 
     @GetMapping("/supprimer/{id}")
-    public String supprimer(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String supprimer(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        if (!isAdmin(session)) {
+            redirectAttributes.addFlashAttribute("error", "Accès non autorisé. Réservé à l'administrateur.");
+            return "redirect:/dashboard";
+        }
+
         utilisateurService.deleteById(id);
         redirectAttributes.addFlashAttribute("success", "Utilisateur supprimé");
         return "redirect:/utilisateurs";
     }
 
-    /**
-     * Génère un matricule pour un enseignant
-     */
     private String generateMatriculeEnseignant() {
         long count = enseignantService.count() + 1;
         return "ENS-" + String.format("%04d", count);
+    }
+
+    /**
+     * Génère un mot de passe aléatoire de 8 caractères
+     */
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            int index = (int) (Math.random() * chars.length());
+            sb.append(chars.charAt(index));
+        }
+        return sb.toString();
     }
 }

@@ -5,13 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "filiere")
+@Table(name = "filieres")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,24 +19,15 @@ public class Filiere {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 10)
-    @NotBlank(message = "Le code est obligatoire")
-    @Size(max = 10, message = "Le code ne peut pas dépasser 10 caractères")
+    @Column(nullable = false, unique = true, length = 10)
     private String code;
 
     @Column(nullable = false, length = 100)
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères")
     private String nom;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private String departement;
-
-    @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Inscription> inscriptions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Matiere> matieres = new ArrayList<>();
+    @OneToMany(mappedBy = "filiere", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Classe> classes = new ArrayList<>();
 }

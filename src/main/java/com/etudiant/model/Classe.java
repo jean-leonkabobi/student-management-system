@@ -5,13 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "classe")
+@Table(name = "classes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,25 +19,21 @@ public class Classe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 20)
-    @NotBlank(message = "Le code est obligatoire")
-    @Size(max = 20, message = "Le code ne peut pas dépasser 20 caractères")
-    private String code;
-
-    @Column(nullable = false, length = 100)
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères")
+    @Column(nullable = false, length = 50)
     private String nom;
 
+    @Column(nullable = false, length = 10)
+    private String niveau; // L1, L2, L3, M1, M2
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "filiere_id")
+    @JoinColumn(name = "filiere_id", nullable = false)
     private Filiere filiere;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "niveau_id")
-    private Niveau niveau;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "annee_academique_id")
-    private AnneeAcademique anneeAcademique;
+    @ManyToMany
+    @JoinTable(
+            name = "classe_etudiants",
+            joinColumns = @JoinColumn(name = "classe_id"),
+            inverseJoinColumns = @JoinColumn(name = "etudiant_id")
+    )
+    private List<Etudiant> etudiants = new ArrayList<>();
 }

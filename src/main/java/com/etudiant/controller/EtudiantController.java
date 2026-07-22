@@ -60,6 +60,49 @@ public class EtudiantController {
     /**
      * Affiche la liste des étudiants - ADMIN et SCOLARITE uniquement
      */
+    /*@GetMapping
+    public String liste(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String statut,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // L'étudiant ne peut pas voir la liste des autres étudiants
+        if (isEtudiant(session)) {
+            redirectAttributes.addFlashAttribute("error", "Vous n'avez pas accès à la liste des étudiants.");
+            return "redirect:/dashboard";
+        }
+
+        log.debug("Affichage de la liste des étudiants - search: {}, statut: {}", search, statut);
+
+        List<Etudiant> etudiants;
+
+        if (search != null && !search.trim().isEmpty()) {
+            etudiants = etudiantService.search(search.trim());
+        } else if (statut != null && !statut.isEmpty()) {
+            try {
+                StatutEtudiant statutEnum = StatutEtudiant.valueOf(statut);
+                etudiants = etudiantService.findByStatut(statutEnum);
+            } catch (IllegalArgumentException e) {
+                etudiants = etudiantService.findAll();
+            }
+        } else {
+            etudiants = etudiantService.findAll();
+        }
+
+        model.addAttribute("etudiants", etudiants);
+        model.addAttribute("search", search);
+        model.addAttribute("statut", statut);
+        model.addAttribute("statuts", StatutEtudiant.values());
+        model.addAttribute("totalEtudiants", etudiantService.countTotal());
+        model.addAttribute("pageActive", "etudiants");
+        model.addAttribute("pageTitle", "Liste des Étudiants");
+        model.addAttribute("role", getRole(session));
+
+        return "etudiants/liste";
+    }*/
+
     @GetMapping
     public String liste(
             @RequestParam(required = false) String search,
@@ -90,6 +133,18 @@ public class EtudiantController {
         } else {
             etudiants = etudiantService.findAll();
         }
+
+        // ==========================================
+        // LOGS DE DEBUG - À SUPPRIMER APRÈS TEST
+        // ==========================================
+        log.info("==================================================");
+        log.info("📊 LISTE DES ÉTUDIANTS RÉCUPÉRÉS");
+        log.info("   Total: {} étudiant(s)", etudiants.size());
+        for (Etudiant e : etudiants) {
+            log.info("   - ID: {}, Matricule: {}, Nom: {}, Prénom: {}",
+                    e.getId(), e.getMatricule(), e.getNom(), e.getPrenom());
+        }
+        log.info("==================================================");
 
         model.addAttribute("etudiants", etudiants);
         model.addAttribute("search", search);
@@ -141,8 +196,8 @@ public class EtudiantController {
             RedirectAttributes redirectAttributes) {
 
         if (!isAdminOrScolarite(session)) {
-            redirectAttributes.addFlashAttribute("error", "Vous n'avez pas le droit d'ajouter des étudiants.");
-            return "redirect:/etudiants";
+            redirectAttributes.addFlashAttribute("success", "Étudiant ajouté avec succès !");
+            return "redirect:/dashboard";
         }
 
         log.debug("Traitement de l'ajout d'un étudiant: {}", etudiant.getNomComplet());

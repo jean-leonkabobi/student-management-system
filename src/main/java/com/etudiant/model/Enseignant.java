@@ -5,12 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "enseignant")
+@Table(name = "enseignants")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,33 +19,20 @@ public class Enseignant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 20)
-    @NotBlank(message = "Le matricule est obligatoire")
-    @Size(max = 20, message = "Le matricule ne peut pas dépasser 20 caractères")
+    @Column(nullable = false, unique = true, length = 20)
     private String matricule;
 
     @Column(nullable = false, length = 50)
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(max = 50, message = "Le nom ne peut pas dépasser 50 caractères")
     private String nom;
 
-    @Column(length = 50)
-    private String postnom;
-
     @Column(nullable = false, length = 50)
-    @NotBlank(message = "Le prénom est obligatoire")
-    @Size(max = 50, message = "Le prénom ne peut pas dépasser 50 caractères")
     private String prenom;
 
-    @Column(length = 20)
-    private String telephone;
-
-    @Email(message = "L'email doit être valide")
     @Column(unique = true, length = 100)
     private String email;
 
-    @Column(length = 50)
-    private String grade;
+    @Column(length = 20)
+    private String telephone;
 
     @Column(length = 100)
     private String specialite;
@@ -54,9 +40,9 @@ public class Enseignant {
     @Column(length = 100)
     private String departement;
 
-    private String photo;
+    @Column(length = 50)
+    private String grade;
 
-    public String getNomComplet() {
-        return (postnom != null && !postnom.isEmpty() ? postnom + " " : "") + nom + " " + prenom;
-    }
+    @OneToMany(mappedBy = "enseignant")
+    private List<Matiere> matieres = new ArrayList<>();
 }
