@@ -4,8 +4,8 @@
 
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-        <h1 class="h2">Liste des Matières</h1>
-        <a href="${pageContext.request.contextPath}/matieres/ajouter" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Ajouter</a>
+        <h1 class="h2">Liste des Classes</h1>
+        <a href="${pageContext.request.contextPath}/classes/ajouter" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Ajouter</a>
     </div>
 
     <form class="row g-2 mb-3" method="get">
@@ -26,22 +26,22 @@
     <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead class="table-dark">
-            <tr><th>Code</th><th>Nom</th><th>Coefficient</th><th>Nb Heures</th><th>Enseignant</th><th>Filière</th><th>Actions</th></tr>
+            <tr><th>Nom</th><th>Niveau</th><th>Filière</th><th>Actions</th></tr>
             </thead>
             <tbody>
-            <c:forEach items="${matieres}" var="m">
+            <c:forEach items="${classes}" var="c">
                 <tr>
-                    <td><span class="badge bg-secondary">${m.code}</span></td>
-                    <td>${m.nom}</td><td>${m.coefficient}</td><td>${m.nombreHeures}h</td>
-                    <td>${m.enseignant != null ? m.enseignant.nom : '-'}</td>
-                    <td>${m.filiere.nom}</td>
+                    <td>${c.nom}</td>
+                    <td><span class="badge bg-info">${c.niveau}</span></td>
+                    <td>${c.filiere.nom}</td>
                     <td>
-                        <a href="${pageContext.request.contextPath}/matieres/modifier/${m.id}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
-                        <a href="${pageContext.request.contextPath}/matieres/supprimer/${m.id}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash"></i></a>
+                        <a href="${pageContext.request.contextPath}/classes/details/${c.id}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                        <a href="${pageContext.request.contextPath}/classes/modifier/${c.id}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                        <a href="${pageContext.request.contextPath}/classes/supprimer/${c.id}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer cette classe ?')"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
             </c:forEach>
-            <c:if test="${empty matieres}"><tr><td colspan="7" class="text-center">Aucune matière</td></tr></c:if>
+            <c:if test="${empty classes}"><tr><td colspan="4" class="text-center">Aucune classe</td></tr></c:if>
             </tbody>
         </table>
     </div>
