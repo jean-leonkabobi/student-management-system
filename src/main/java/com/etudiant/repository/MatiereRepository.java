@@ -1,7 +1,7 @@
 package com.etudiant.repository;
 
+import com.etudiant.model.Filiere;
 import com.etudiant.model.Matiere;
-import com.etudiant.model.Matiere.Semestre;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,13 +13,9 @@ public interface MatiereRepository extends JpaRepository<Matiere, Long> {
 
     Optional<Matiere> findByCode(String code);
 
+    List<Matiere> findByFiliere(Filiere filiere);
+
     List<Matiere> findByFiliereId(Long filiereId);
-
-    List<Matiere> findByNiveauId(Long niveauId);
-
-    List<Matiere> findByFiliereIdAndNiveauId(Long filiereId, Long niveauId);
-
-    List<Matiere> findBySemestre(Semestre semestre);
 
     List<Matiere> findByEnseignantId(Long enseignantId);
 

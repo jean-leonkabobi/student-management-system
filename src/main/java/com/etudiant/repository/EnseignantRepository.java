@@ -14,7 +14,7 @@ public interface EnseignantRepository extends JpaRepository<Enseignant, Long> {
 
     Optional<Enseignant> findByEmail(String email);
 
-    List<Enseignant> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(String nom, String prenom);
+    List<Enseignant> findByDepartement(String departement);
 
-    boolean existsByMatricule(String matricule);
+    List<Enseignant> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(String nom, String prenom);
 }
