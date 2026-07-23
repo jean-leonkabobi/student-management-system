@@ -77,7 +77,7 @@ public class EnseignantServiceImpl implements EnseignantService {
     @Override
     public String generateMatricule() {
         String year = String.valueOf(Year.now().getValue());
-        long count = enseignantRepository.count() + 1;
-        return "ENS" + year + String.format("%04d", count);
+        long timestamp = System.currentTimeMillis() % 100000;
+        return "ENS" + year + String.format("%05d", timestamp);
     }
 }
