@@ -1,4 +1,4 @@
-package com.etudiant.util;
+package com.etudiant.utils;
 
 import java.time.Year;
 

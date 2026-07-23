@@ -2,16 +2,19 @@ package com.etudiant.controller;
 
 import com.etudiant.model.Etudiant;
 import com.etudiant.service.EtudiantService;
+import com.etudiant.utils.ExcelExportUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -99,5 +102,11 @@ public class EtudiantController {
         }
         redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé");
         return "redirect:/etudiants";
+    }
+
+    @GetMapping("/export/excel")
+    public void exportExcel(HttpServletResponse response) {
+        List<Etudiant> etudiants = etudiantService.findAll();
+        ExcelExportUtil.exportEtudiants(etudiants, response);
     }
 }

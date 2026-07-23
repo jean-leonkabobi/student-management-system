@@ -4,6 +4,7 @@ import com.etudiant.model.Utilisateur;
 import com.etudiant.model.Filiere;
 import com.etudiant.service.UtilisateurService;
 import com.etudiant.service.FiliereService;
+import com.etudiant.utils.PasswordUtil;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +29,7 @@ public class DataInitializer implements CommandLineRunner {
         if (utilisateurService.count() == 0) {
             Utilisateur admin = new Utilisateur();
             admin.setUsername("admin");
-            admin.setPassword("admin123");
+            admin.setPassword(PasswordUtil.hash("admin123"));
             admin.setRole("ADMIN");
             admin.setNom("Admin");
             admin.setPrenom("Super");
@@ -38,7 +39,7 @@ public class DataInitializer implements CommandLineRunner {
 
             Utilisateur scolarite = new Utilisateur();
             scolarite.setUsername("scolarite");
-            scolarite.setPassword("scolarite123");
+            scolarite.setPassword(PasswordUtil.hash("scolarite123"));
             scolarite.setRole("SCOLARITE");
             scolarite.setNom("Scolarité");
             scolarite.setPrenom("Agent");

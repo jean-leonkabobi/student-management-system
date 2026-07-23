@@ -26,5 +26,9 @@
     </div>
     <a href="${pageContext.request.contextPath}/notes" class="btn btn-secondary">Retour</a>
     <button class="btn btn-success" onclick="window.print()"><i class="bi bi-printer"></i> Imprimer</button>
+
+    <a href="${pageContext.request.contextPath}/notes/releve/pdf/${etudiant.id}" class="btn btn-danger">
+        <i class="bi bi-file-pdf"></i> Télécharger PDF
+    </a>
 </main>
 <%@ include file="../fragments/footer.jsp" %>

@@ -22,7 +22,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <span class="nav-link"><i class="bi bi-person-circle"></i> Bienvenue</span>
+                    <span class="nav-link"><i class="bi bi-person-circle"></i> ${sessionScope.userPrenom} ${sessionScope.userNom}</span>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="${pageContext.request.contextPath}/logout"><i class="bi bi-box-arrow-right"></i> Déconnexion</a>

@@ -8,6 +8,10 @@
         <a href="${pageContext.request.contextPath}/etudiants/ajouter" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Ajouter</a>
     </div>
 
+    <a href="${pageContext.request.contextPath}/etudiants/export/excel" class="btn btn-success ms-2">
+        <i class="bi bi-file-earmark-excel"></i> Export Excel
+    </a>
+
     <form class="row g-2 mb-3" method="get">
         <div class="col-md-4">
             <input type="text" name="search" class="form-control" placeholder="Rechercher par nom ou prénom..." value="${search}">

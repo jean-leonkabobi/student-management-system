@@ -6,11 +6,14 @@ import com.etudiant.model.Note;
 import com.etudiant.service.EtudiantService;
 import com.etudiant.service.MatiereService;
 import com.etudiant.service.NoteService;
+import com.etudiant.utils.PdfExportUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -111,5 +114,14 @@ public class NoteController {
         }
         redirectAttributes.addFlashAttribute("error", "Étudiant non trouvé");
         return "redirect:/notes";
+    }
+
+    @GetMapping("/releve/pdf/{etudiantId}")
+    public void exportPdf(@PathVariable Long etudiantId, HttpServletResponse response) {
+        Optional<Etudiant> etudiant = etudiantService.findById(etudiantId);
+        if (etudiant.isPresent()) {
+            List<Note> notes = noteService.findByEtudiantId(etudiantId);
+            PdfExportUtil.exportReleveNotes(etudiant.get(), notes, response);
+        }
     }
 }

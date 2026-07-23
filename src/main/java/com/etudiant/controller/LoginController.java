@@ -2,6 +2,7 @@ package com.etudiant.controller;
 
 import com.etudiant.model.Utilisateur;
 import com.etudiant.service.UtilisateurService;
+import com.etudiant.utils.PasswordUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +36,7 @@ public class LoginController {
 
         Optional<Utilisateur> userOpt = utilisateurService.findByUsername(username);
 
-        if (userOpt.isPresent() && userOpt.get().getPassword().equals(password) && userOpt.get().getActif()) {
+        if (userOpt.isPresent() && PasswordUtil.verify(password, userOpt.get().getPassword()) && userOpt.get().getActif()) {
             Utilisateur user = userOpt.get();
             session.setAttribute("user", user);
             session.setAttribute("userId", user.getId());
