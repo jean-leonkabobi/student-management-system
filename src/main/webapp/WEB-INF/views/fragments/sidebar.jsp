@@ -1,8 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-    <div class="position-sticky pt-3">
+<nav class="col-md-3 col-lg-2 d-md-block sidebar">
+    <div class="pt-2">
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link" href="${pageContext.request.contextPath}/">
@@ -39,11 +39,13 @@
                     <i class="bi bi-journal-check"></i> Notes
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/utilisateurs">
-                    <i class="bi bi-shield-lock-fill"></i> Utilisateurs
-                </a>
-            </li>
+            <c:if test="${sessionScope.role == 'ADMIN'}">
+                <li class="nav-item">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/utilisateurs">
+                        <i class="bi bi-shield-lock-fill"></i> Utilisateurs
+                    </a>
+                </li>
+            </c:if>
         </ul>
     </div>
 </nav>

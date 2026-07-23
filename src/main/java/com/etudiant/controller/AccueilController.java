@@ -33,9 +33,4 @@ public class AccueilController {
         model.addAttribute("nbMatieres", matiereService.count());
         return "accueil";
     }
-
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
 }

@@ -6,7 +6,14 @@
     <h2>Détails de l'étudiant</h2>
     <div class="card col-md-6">
         <div class="card-body text-center">
-            <img src="${pageContext.request.contextPath}/images/default-avatar.png" width="100" class="rounded-circle mb-3">
+            <c:choose>
+                <c:when test="${not empty etudiant.photo}">
+                    <img src="${pageContext.request.contextPath}${etudiant.photo}" width="100" height="100" class="rounded-circle mb-3" style="object-fit: cover;">
+                </c:when>
+                <c:otherwise>
+                    <img src="${pageContext.request.contextPath}/images/default-avatar.png" width="100" height="100" class="rounded-circle mb-3">
+                </c:otherwise>
+            </c:choose>
             <h4>${etudiant.prenom} ${etudiant.nom}</h4>
             <p><strong>Matricule :</strong> ${etudiant.matricule}</p>
             <p><strong>Date naissance :</strong> ${etudiant.dateNaissance}</p>

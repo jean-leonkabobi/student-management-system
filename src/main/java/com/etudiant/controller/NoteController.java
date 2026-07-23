@@ -1,5 +1,7 @@
 package com.etudiant.controller;
 
+import com.etudiant.model.Etudiant;
+import com.etudiant.model.Matiere;
 import com.etudiant.model.Note;
 import com.etudiant.service.EtudiantService;
 import com.etudiant.service.MatiereService;
@@ -28,11 +30,8 @@ public class NoteController {
 
     @GetMapping
     public String liste(Model model, @RequestParam(required = false) Long etudiantId,
-                        @RequestParam(required = false) Long matiereId,
                         @RequestParam(required = false) String semestre) {
         model.addAttribute("etudiants", etudiantService.findAll());
-        model.addAttribute("matieres", matiereService.findAll());
-
         if (etudiantId != null && semestre != null && !semestre.isEmpty()) {
             model.addAttribute("notes", noteService.findByEtudiantIdAndSemestre(etudiantId, semestre));
             model.addAttribute("selectedEtudiant", etudiantId);
@@ -40,9 +39,6 @@ public class NoteController {
         } else if (etudiantId != null) {
             model.addAttribute("notes", noteService.findByEtudiantId(etudiantId));
             model.addAttribute("selectedEtudiant", etudiantId);
-        } else if (matiereId != null) {
-            model.addAttribute("notes", noteService.findByMatiereId(matiereId));
-            model.addAttribute("selectedMatiere", matiereId);
         } else {
             model.addAttribute("notes", noteService.findAll());
         }
@@ -58,9 +54,25 @@ public class NoteController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute("note") Note note, RedirectAttributes redirectAttributes) {
-        noteService.save(note);
-        redirectAttributes.addFlashAttribute("success", "Note enregistrée avec succès");
+    public String save(@ModelAttribute("note") Note note,
+                       @RequestParam("etudiantId") Long etudiantId,
+                       @RequestParam("matiereId") Long matiereId,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Etudiant> etudiant = etudiantService.findById(etudiantId);
+            Optional<Matiere> matiere = matiereService.findById(matiereId);
+
+            if (etudiant.isPresent() && matiere.isPresent()) {
+                note.setEtudiant(etudiant.get());
+                note.setMatiere(matiere.get());
+                noteService.save(note);
+                redirectAttributes.addFlashAttribute("success", "Note enregistrée avec succès !");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Étudiant ou matière introuvable");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
         return "redirect:/notes";
     }
 
@@ -91,7 +103,7 @@ public class NoteController {
     @GetMapping("/releve/{etudiantId}")
     public String releveNotes(@PathVariable Long etudiantId, Model model,
                               RedirectAttributes redirectAttributes) {
-        Optional<com.etudiant.model.Etudiant> etudiant = etudiantService.findById(etudiantId);
+        Optional<Etudiant> etudiant = etudiantService.findById(etudiantId);
         if (etudiant.isPresent()) {
             model.addAttribute("etudiant", etudiant.get());
             model.addAttribute("notes", noteService.findByEtudiantId(etudiantId));

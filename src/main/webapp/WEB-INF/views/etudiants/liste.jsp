@@ -29,7 +29,16 @@
             <c:forEach items="${etudiants}" var="e">
                 <tr>
                     <td>${e.matricule}</td>
-                    <td><img src="${pageContext.request.contextPath}/images/default-avatar.png" width="30" height="30" class="rounded-circle"></td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty e.photo}">
+                                <img src="${pageContext.request.contextPath}${e.photo}" width="30" height="30" class="rounded-circle" style="object-fit: cover;">
+                            </c:when>
+                            <c:otherwise>
+                                <img src="${pageContext.request.contextPath}/images/default-avatar.png" width="30" height="30" class="rounded-circle">
+                            </c:otherwise>
+                        </c:choose>
+                    </td>
                     <td>${e.nom}</td>
                     <td>${e.prenom}</td>
                     <td>${e.email}</td>

@@ -34,17 +34,25 @@ public class UtilisateurController {
     }
 
     @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("utilisateur") Utilisateur utilisateur,
+    public String save(@ModelAttribute("utilisateur") Utilisateur utilisateur,
                        BindingResult result, RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            return "utilisateurs/form";
+        try {
+            if (utilisateur.getId() != null) {
+                // Modification
+                utilisateurService.update(utilisateur.getId(), utilisateur);
+                redirectAttributes.addFlashAttribute("success", "Utilisateur modifié avec succès");
+            } else {
+                // Création
+                if (utilisateurService.existsByUsername(utilisateur.getUsername())) {
+                    redirectAttributes.addFlashAttribute("error", "Ce nom d'utilisateur existe déjà");
+                    return "redirect:/utilisateurs/ajouter";
+                }
+                utilisateurService.save(utilisateur);
+                redirectAttributes.addFlashAttribute("success", "Utilisateur créé avec succès");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
         }
-        if (utilisateurService.existsByUsername(utilisateur.getUsername())) {
-            redirectAttributes.addFlashAttribute("error", "Ce nom d'utilisateur existe déjà");
-            return "redirect:/utilisateurs/ajouter";
-        }
-        utilisateurService.save(utilisateur);
-        redirectAttributes.addFlashAttribute("success", "Utilisateur créé avec succès");
         return "redirect:/utilisateurs";
     }
 

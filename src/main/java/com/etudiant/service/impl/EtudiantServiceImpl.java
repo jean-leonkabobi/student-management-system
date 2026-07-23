@@ -79,7 +79,7 @@ public class EtudiantServiceImpl implements EtudiantService {
     @Override
     public String generateMatricule() {
         String year = String.valueOf(Year.now().getValue());
-        long count = etudiantRepository.count() + 1;
-        return "ETU" + year + String.format("%04d", count);
+        long timestamp = System.currentTimeMillis() % 100000;
+        return "ETU" + year + String.format("%05d", timestamp);
     }
 }

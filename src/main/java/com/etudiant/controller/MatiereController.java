@@ -1,16 +1,16 @@
 package com.etudiant.controller;
 
+import com.etudiant.model.Enseignant;
+import com.etudiant.model.Filiere;
 import com.etudiant.model.Matiere;
 import com.etudiant.service.EnseignantService;
 import com.etudiant.service.FiliereService;
 import com.etudiant.service.MatiereService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.validation.Valid;
 import java.util.Optional;
 
 @Controller
@@ -29,15 +29,11 @@ public class MatiereController {
     }
 
     @GetMapping
-    public String liste(Model model, @RequestParam(required = false) Long filiereId,
-                        @RequestParam(required = false) Long enseignantId) {
+    public String liste(Model model, @RequestParam(required = false) Long filiereId) {
         model.addAttribute("filieres", filiereService.findAll());
         if (filiereId != null) {
             model.addAttribute("matieres", matiereService.findByFiliereId(filiereId));
             model.addAttribute("selectedFiliere", filiereId);
-        } else if (enseignantId != null) {
-            model.addAttribute("matieres", matiereService.findByEnseignantId(enseignantId));
-            model.addAttribute("selectedEnseignant", enseignantId);
         } else {
             model.addAttribute("matieres", matiereService.findAll());
         }
@@ -53,17 +49,28 @@ public class MatiereController {
     }
 
     @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("matiere") Matiere matiere,
-                       BindingResult result, RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            return "matieres/form";
+    public String save(@ModelAttribute("matiere") Matiere matiere,
+                       @RequestParam(value = "filiereId", required = false) Long filiereId,
+                       @RequestParam(value = "enseignantId", required = false) Long enseignantId,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            // Lier la filière
+            if (filiereId != null) {
+                Optional<Filiere> filiere = filiereService.findById(filiereId);
+                filiere.ifPresent(matiere::setFiliere);
+            }
+
+            // Lier l'enseignant
+            if (enseignantId != null) {
+                Optional<Enseignant> enseignant = enseignantService.findById(enseignantId);
+                enseignant.ifPresent(matiere::setEnseignant);
+            }
+
+            matiereService.save(matiere);
+            redirectAttributes.addFlashAttribute("success", "Matière enregistrée avec succès !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
         }
-        if (matiereService.existsByCode(matiere.getCode())) {
-            redirectAttributes.addFlashAttribute("error", "Ce code de matière existe déjà");
-            return "redirect:/matieres/ajouter";
-        }
-        matiereService.save(matiere);
-        redirectAttributes.addFlashAttribute("success", "Matière créée avec succès");
         return "redirect:/matieres";
     }
 

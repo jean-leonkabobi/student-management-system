@@ -3,91 +3,62 @@
 <%@ include file="fragments/sidebar.jsp" %>
 
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Tableau de bord</h1>
+    <div class="page-header">
+        <h2><i class="bi bi-speedometer2 me-2"></i>Tableau de bord</h2>
     </div>
 
-    <c:if test="${not empty success}">
-        <div class="alert alert-success alert-dismissible fade show">${success}</div>
-    </c:if>
-    <c:if test="${not empty error}">
-        <div class="alert alert-danger alert-dismissible fade show">${error}</div>
-    </c:if>
+    <c:if test="${not empty success}"><div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>${success}</div></c:if>
+    <c:if test="${not empty error}"><div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${error}</div></c:if>
 
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Étudiants</h5>
-                            <h2>${nbEtudiants}</h2>
-                        </div>
-                        <i class="bi bi-people-fill" style="font-size: 3rem; opacity: 0.4;"></i>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/etudiants" class="text-white">Voir plus →</a>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card primary">
+                <div class="stat-info">
+                    <h3>${nbEtudiants}</h3>
+                    <p><i class="bi bi-people-fill me-1"></i>Étudiants</p>
                 </div>
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Enseignants</h5>
-                            <h2>${nbEnseignants}</h2>
-                        </div>
-                        <i class="bi bi-person-workspace" style="font-size: 3rem; opacity: 0.4;"></i>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/enseignants" class="text-white">Voir plus →</a>
+        <div class="col-md-4">
+            <div class="stat-card success">
+                <div class="stat-info">
+                    <h3>${nbEnseignants}</h3>
+                    <p><i class="bi bi-person-workspace me-1"></i>Enseignants</p>
                 </div>
+                <div class="stat-icon"><i class="bi bi-person-workspace"></i></div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Filières</h5>
-                            <h2>${nbFilieres}</h2>
-                        </div>
-                        <i class="bi bi-diagram-3-fill" style="font-size: 3rem; opacity: 0.4;"></i>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/filieres" class="text-white">Voir plus →</a>
+        <div class="col-md-4">
+            <div class="stat-card warning">
+                <div class="stat-info">
+                    <h3>${nbFilieres}</h3>
+                    <p><i class="bi bi-diagram-3-fill me-1"></i>Filières</p>
                 </div>
+                <div class="stat-icon"><i class="bi bi-diagram-3-fill"></i></div>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Classes</h5>
-                            <h2>${nbClasses}</h2>
-                        </div>
-                        <i class="bi bi-easel-fill" style="font-size: 3rem; opacity: 0.4;"></i>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/classes" class="text-white">Voir plus →</a>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="stat-card info">
+                <div class="stat-info">
+                    <h3>${nbClasses}</h3>
+                    <p><i class="bi bi-easel-fill me-1"></i>Classes</p>
                 </div>
+                <div class="stat-icon"><i class="bi bi-easel-fill"></i></div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card text-white bg-secondary">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h5 class="card-title">Matières</h5>
-                            <h2>${nbMatieres}</h2>
-                        </div>
-                        <i class="bi bi-book-fill" style="font-size: 3rem; opacity: 0.4;"></i>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/matieres" class="text-white">Voir plus →</a>
+        <div class="col-md-4">
+            <div class="stat-card accent">
+                <div class="stat-info">
+                    <h3>${nbMatieres}</h3>
+                    <p><i class="bi bi-book-fill me-1"></i>Matières</p>
                 </div>
+                <div class="stat-icon"><i class="bi bi-book-fill"></i></div>
             </div>
         </div>
     </div>
 </main>
-
 <%@ include file="fragments/footer.jsp" %>

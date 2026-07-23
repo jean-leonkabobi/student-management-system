@@ -4,18 +4,23 @@ import com.etudiant.model.Etudiant;
 import com.etudiant.service.EtudiantService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/etudiants")
 public class EtudiantController {
 
     private final EtudiantService etudiantService;
+    private static final String UPLOAD_DIR = "src/main/webapp/static/uploads/";
 
     public EtudiantController(EtudiantService etudiantService) {
         this.etudiantService = etudiantService;
@@ -39,13 +44,27 @@ public class EtudiantController {
     }
 
     @PostMapping("/save")
-    public String save(@Valid @ModelAttribute("etudiant") Etudiant etudiant,
-                       BindingResult result, RedirectAttributes redirectAttributes) {
-        if (result.hasErrors()) {
-            return "etudiants/form";
+    public String save(@ModelAttribute("etudiant") Etudiant etudiant,
+                       @RequestParam(value = "photoFile", required = false) MultipartFile photoFile,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            // Gestion de l'upload photo
+            if (photoFile != null && !photoFile.isEmpty()) {
+                String fileName = UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
+                Path uploadPath = Paths.get(UPLOAD_DIR);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+                Files.copy(photoFile.getInputStream(), uploadPath.resolve(fileName));
+                etudiant.setPhoto("/uploads/" + fileName);
+            }
+
+            etudiantService.save(etudiant);
+            redirectAttributes.addFlashAttribute("success", "Étudiant enregistré avec succès !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+            e.printStackTrace();
         }
-        etudiantService.save(etudiant);
-        redirectAttributes.addFlashAttribute("success", "Étudiant enregistré avec succès");
         return "redirect:/etudiants";
     }
 

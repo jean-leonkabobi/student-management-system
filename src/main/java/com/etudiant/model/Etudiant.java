@@ -2,6 +2,7 @@ package com.etudiant.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -28,6 +29,7 @@ public class Etudiant {
     @Column(nullable = false, length = 50)
     private String prenom;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 

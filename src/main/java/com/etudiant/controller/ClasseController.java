@@ -1,6 +1,7 @@
 package com.etudiant.controller;
 
 import com.etudiant.model.Classe;
+import com.etudiant.model.Filiere;
 import com.etudiant.service.ClasseService;
 import com.etudiant.service.EtudiantService;
 import com.etudiant.service.FiliereService;
@@ -46,9 +47,19 @@ public class ClasseController {
     }
 
     @PostMapping("/save")
-    public String save(@ModelAttribute("classe") Classe classe, RedirectAttributes redirectAttributes) {
-        classeService.save(classe);
-        redirectAttributes.addFlashAttribute("success", "Classe créée avec succès");
+    public String save(@ModelAttribute("classe") Classe classe,
+                       @RequestParam(value = "filiereId", required = false) Long filiereId,
+                       RedirectAttributes redirectAttributes) {
+        try {
+            if (filiereId != null) {
+                Optional<Filiere> filiere = filiereService.findById(filiereId);
+                filiere.ifPresent(classe::setFiliere);
+            }
+            classeService.save(classe);
+            redirectAttributes.addFlashAttribute("success", "Classe enregistrée avec succès !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
         return "redirect:/classes";
     }
 
@@ -80,7 +91,7 @@ public class ClasseController {
         Optional<Classe> classe = classeService.findById(id);
         if (classe.isPresent()) {
             model.addAttribute("classe", classe.get());
-            model.addAttribute("etudiantsLibres", etudiantService.findAll());
+            model.addAttribute("etudiantsDisponibles", etudiantService.findAll());
             return "classes/details";
         }
         redirectAttributes.addFlashAttribute("error", "Classe non trouvée");
@@ -90,19 +101,26 @@ public class ClasseController {
     @PostMapping("/{classeId}/ajouter-etudiant")
     public String ajouterEtudiant(@PathVariable Long classeId, @RequestParam Long etudiantId,
                                   RedirectAttributes redirectAttributes) {
-        Optional<Classe> classe = classeService.findById(classeId);
-        classe.ifPresent(c -> etudiantService.findById(etudiantId).ifPresent(e -> {
-            classeService.addEtudiant(classeId, e);
-            redirectAttributes.addFlashAttribute("success", "Étudiant ajouté à la classe");
-        }));
+        try {
+            etudiantService.findById(etudiantId).ifPresent(e -> {
+                classeService.addEtudiant(classeId, e);
+                redirectAttributes.addFlashAttribute("success", "Étudiant ajouté à la classe");
+            });
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
         return "redirect:/classes/details/" + classeId;
     }
 
     @GetMapping("/{classeId}/retirer-etudiant/{etudiantId}")
     public String retirerEtudiant(@PathVariable Long classeId, @PathVariable Long etudiantId,
                                   RedirectAttributes redirectAttributes) {
-        classeService.removeEtudiant(classeId, etudiantId);
-        redirectAttributes.addFlashAttribute("success", "Étudiant retiré de la classe");
+        try {
+            classeService.removeEtudiant(classeId, etudiantId);
+            redirectAttributes.addFlashAttribute("success", "Étudiant retiré de la classe");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur : " + e.getMessage());
+        }
         return "redirect:/classes/details/" + classeId;
     }
 }
