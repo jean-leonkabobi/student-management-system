@@ -3,6 +3,8 @@ package com.etudiant.service;
 import com.etudiant.model.Etudiant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EtudiantService {
     Etudiant save(Etudiant etudiant);
@@ -15,4 +17,6 @@ public interface EtudiantService {
     boolean existsByMatricule(String matricule);
     long count();
     String generateMatricule();
+    Page<Etudiant> findAllPaginated(Pageable pageable);
+    Page<Etudiant> searchPaginated(String keyword, Pageable pageable);
 }

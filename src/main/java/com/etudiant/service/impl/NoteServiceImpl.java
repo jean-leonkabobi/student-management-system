@@ -1,7 +1,8 @@
-package com.etudiant.service;
+package com.etudiant.service.impl;
 
 import com.etudiant.model.Note;
 import com.etudiant.repository.NoteRepository;
+import com.etudiant.service.NoteService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

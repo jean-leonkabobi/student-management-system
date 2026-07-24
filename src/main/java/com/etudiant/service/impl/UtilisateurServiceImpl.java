@@ -1,7 +1,8 @@
-package com.etudiant.service;
+package com.etudiant.service.impl;
 
 import com.etudiant.model.Utilisateur;
 import com.etudiant.repository.UtilisateurRepository;
+import com.etudiant.service.UtilisateurService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

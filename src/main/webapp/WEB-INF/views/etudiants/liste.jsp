@@ -59,5 +59,27 @@
             </tbody>
         </table>
     </div>
+
+    <c:if test="${totalPages > 1}">
+        <nav>
+            <ul class="pagination justify-content-center mt-3">
+                <c:if test="${currentPage > 0}">
+                    <li class="page-item">
+                        <a class="page-link" href="?page=${currentPage - 1}&size=10<c:if test='${not empty search}'>&search=${search}</c:if>">Précédent</a>
+                    </li>
+                </c:if>
+                <c:forEach begin="0" end="${totalPages - 1}" var="i">
+                    <li class="page-item ${currentPage == i ? 'active' : ''}">
+                        <a class="page-link" href="?page=${i}&size=10<c:if test='${not empty search}'>&search=${search}</c:if>">${i + 1}</a>
+                    </li>
+                </c:forEach>
+                <c:if test="${currentPage < totalPages - 1}">
+                    <li class="page-item">
+                        <a class="page-link" href="?page=${currentPage + 1}&size=10<c:if test='${not empty search}'>&search=${search}</c:if>">Suivant</a>
+                    </li>
+                </c:if>
+            </ul>
+        </nav>
+    </c:if>
 </main>
 <%@ include file="../fragments/footer.jsp" %>

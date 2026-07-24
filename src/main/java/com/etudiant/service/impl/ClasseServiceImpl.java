@@ -1,9 +1,10 @@
-package com.etudiant.service;
+package com.etudiant.service.impl;
 
 import com.etudiant.model.Classe;
 import com.etudiant.model.Etudiant;
 import com.etudiant.repository.ClasseRepository;
 import com.etudiant.repository.EtudiantRepository;
+import com.etudiant.service.ClasseService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

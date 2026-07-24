@@ -1,7 +1,8 @@
-package com.etudiant.service;
+package com.etudiant.service.impl;
 
 import com.etudiant.model.Enseignant;
 import com.etudiant.repository.EnseignantRepository;
+import com.etudiant.service.EnseignantService;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;

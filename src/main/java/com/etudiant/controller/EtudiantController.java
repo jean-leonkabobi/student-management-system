@@ -8,9 +8,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,13 +32,23 @@ public class EtudiantController {
     }
 
     @GetMapping
-    public String liste(Model model, @RequestParam(required = false) String search) {
+    public String liste(Model model, @RequestParam(required = false) String search,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Etudiant> etudiantPage;
+
         if (search != null && !search.isEmpty()) {
-            model.addAttribute("etudiants", etudiantService.search(search));
+            etudiantPage = etudiantService.searchPaginated(search, pageable);
             model.addAttribute("search", search);
         } else {
-            model.addAttribute("etudiants", etudiantService.findAll());
+            etudiantPage = etudiantService.findAllPaginated(pageable);
         }
+
+        model.addAttribute("etudiants", etudiantPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", etudiantPage.getTotalPages());
+        model.addAttribute("totalItems", etudiantPage.getTotalElements());
         return "etudiants/liste";
     }
 

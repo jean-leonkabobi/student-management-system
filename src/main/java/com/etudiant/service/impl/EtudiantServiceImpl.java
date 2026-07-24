@@ -1,7 +1,10 @@
-package com.etudiant.service;
+package com.etudiant.service.impl;
 
 import com.etudiant.model.Etudiant;
 import com.etudiant.repository.EtudiantRepository;
+import com.etudiant.service.EtudiantService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
@@ -81,5 +84,15 @@ public class EtudiantServiceImpl implements EtudiantService {
         String year = String.valueOf(Year.now().getValue());
         long timestamp = System.currentTimeMillis() % 100000;
         return "ETU" + year + String.format("%05d", timestamp);
+    }
+
+    @Override
+    public Page<Etudiant> findAllPaginated(Pageable pageable) {
+        return etudiantRepository.findAll(pageable);
+    }
+
+    @Override
+    public Page<Etudiant> searchPaginated(String keyword, Pageable pageable) {
+        return etudiantRepository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(keyword, keyword, pageable);
     }
 }

@@ -48,6 +48,9 @@
                     <td>
                         <a href="${pageContext.request.contextPath}/notes/modifier/${n.id}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
                         <a href="${pageContext.request.contextPath}/notes/supprimer/${n.id}" class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')"><i class="bi bi-trash"></i></a>
+                        <a href="${pageContext.request.contextPath}/notes/releve/${n.etudiant.id}" class="btn btn-sm btn-success" title="Relevé">
+                            <i class="bi bi-file-text"></i> Relevé
+                        </a>
                     </td>
                 </tr>
             </c:forEach>
